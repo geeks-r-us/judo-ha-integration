@@ -1,0 +1,18 @@
+# Docker ignore for devcontainer build
+.git
+.vscode
+*.md
+docs
+tests
+.pytest_cache
+.coverage
+htmlcov
+__pycache__
+*.pyc
+*.pyo
+.env
+.venv
+venv/
+node_modules
+.DS_Store
+*.log

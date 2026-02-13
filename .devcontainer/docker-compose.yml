@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  homeassistant:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: judo-isoft-homeassistant-dev
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - homeassistant
+    volumes:
+      - ../:/workspaces/judo-ha-integration:cached
+      - ./config:/config:cached
+      - ./setup.sh:/setup.sh:ro
+      - ./start.sh:/start.sh:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    ports:
+      - "8123:8123"
+      - "5678:5678" # Python debugger port
+    environment:
+      - TZ=UTC
+      - PYTHONPATH=/workspaces/judo-ha-integration/src:/config/custom_components
+    stdin_open: true
+    tty: true
+    working_dir: /workspaces/judo-ha-integration
+
+  # Mock Judo iSoft device for testing
+  mock_device:
+    image: python:3.11-slim
+    container_name: judo-isoft-mock-device
+    restart: unless-stopped
+    networks:
+      - homeassistant
+    volumes:
+      - ../tests/mock_device:/app:cached
+    ports:
+      - "8080:8080"
+    command: python /app/mock_server.py
+    environment:
+      - PYTHONUNBUFFERED=1
+
+networks:
+  homeassistant:
+    driver: bridge

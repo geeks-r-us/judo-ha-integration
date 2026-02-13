@@ -1,0 +1,44 @@
+# Example automations for Judo iSoft integration development
+
+# Automation to log when Judo iSoft system comes online
+- id: judo_isoft_online
+  alias: "Judo iSoft System Online"
+  description: "Log when Judo iSoft system comes online"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.judo_isoft_online
+      to: "on"
+  action:
+    - service: system_log.write
+      data:
+        message: "Judo iSoft system is now online"
+        level: info
+
+# Automation to alert on low salt level
+- id: judo_isoft_low_salt
+  alias: "Judo iSoft Low Salt Alert"
+  description: "Alert when salt level is low"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.judo_isoft_salt_level
+      below: 20
+  action:
+    - service: persistent_notification.create
+      data:
+        title: "Judo iSoft - Low Salt Level"
+        message: "Salt level is {{ states('sensor.judo_isoft_salt_level') }}%. Please refill salt."
+        notification_id: judo_isoft_low_salt
+
+# Automation to log maintenance alerts
+- id: judo_isoft_maintenance
+  alias: "Judo iSoft Maintenance Required"
+  description: "Log when maintenance is required"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.judo_isoft_maintenance_required
+      to: "on"
+  action:
+    - service: system_log.write
+      data:
+        message: "Judo iSoft system requires maintenance"
+        level: warning

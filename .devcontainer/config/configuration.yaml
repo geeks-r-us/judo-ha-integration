@@ -1,0 +1,100 @@
+# Home Assistant Configuration for Judo iSoft Integration Development
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+# Enable the Home Assistant API
+api:
+
+# Enable configuration UI
+config:
+
+# Enable system health
+system_health:
+
+# Enable logbook
+logbook:
+
+# Enable history
+history:
+
+# Enable energy monitoring
+energy:
+
+# Example automation yaml
+automation: !include automations.yaml
+
+# Example script yaml  
+script: !include scripts.yaml
+
+# Example scene yaml
+scene: !include scenes.yaml
+
+# Home Assistant Cloud
+cloud:
+
+# Enable developer tools
+developer:
+
+# Logger configuration for development
+logger:
+  default: info
+  logs:
+    custom_components.judo_isoft: debug
+    homeassistant.components.sensor: debug
+    homeassistant.components.binary_sensor: debug
+    homeassistant.helpers.entity: debug
+    homeassistant.helpers.update_coordinator: debug
+
+# Development recorder configuration (SQLite)
+recorder:
+  db_url: sqlite:////config/home-assistant_v2.db
+  purge_keep_days: 7
+  auto_purge: true
+
+# HTTP configuration for development
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.0.0.0/8
+    - 192.168.0.0/16
+    - 10.0.0.0/8
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+# Example binary sensors for development
+binary_sensor:
+  - platform: template
+    sensors:
+      development_mode:
+        friendly_name: "Development Mode"
+        value_template: "true"
+
+# Example sensors for development  
+sensor:
+  - platform: template
+    sensors:
+      dev_timestamp:
+        friendly_name: "Development Timestamp"
+        value_template: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+        
+  - platform: time_date
+    display_options:
+      - 'time'
+      - 'date'
+      - 'date_time'
+      - 'time_date'
+
+# Enable debug in development
+debug:
+
+# Enable profiler for performance testing
+profiler:
+
+# Enable diagnostics
+diagnostics:

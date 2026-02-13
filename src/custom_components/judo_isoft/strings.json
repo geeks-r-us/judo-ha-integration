@@ -1,0 +1,165 @@
+{
+  "title": "Judo iSoft",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Judo iSoft",
+        "description": "Set up your Judo iSoft water treatment system. For local access: enter IP address. For cloud-only access: enter username/password (IP optional).",
+        "data": {
+          "host": "Device IP Address (optional for cloud-only)",
+          "port": "Port (default: {default_port})",
+          "username": "Username (required for newer devices)",
+          "password": "Password (required for newer devices)"
+        },
+        "data_description": {
+          "host": "Enter the IP address of your device for local access, or leave empty if using cloud-only access",
+          "port": "The port number for local API connection (ignored for cloud access)",
+          "username": "Username from your Judo app account (required for newer devices using cloud service)",
+          "password": "Password from your Judo app account (required for newer devices using cloud service)"
+        }
+      }
+    },
+    "error": {
+      "host_or_credentials_required": "Either enter the device IP address for local access, or enter username and password for cloud access.",
+      "host_required_for_local": "IP address is required when not using cloud access (username/password).",
+      "cannot_connect": "Failed to connect to the Judo iSoft system. Please check the IP address/device ID and ensure the system is accessible.",
+      "invalid_auth": "Authentication failed. Please check your username and password. For newer devices, these credentials are required for cloud access.",
+      "cloud_service_empty_response": "⚠️ Judo Cloud Service Issue: The cloud service returned an empty response. This appears to be a temporary issue with Judo's cloud API. Please try again later or contact Judo support if the problem persists.",
+      "timeout_connect": "⚠️ Network Timeout: Unable to connect to the Judo service within the expected time. This could be due to network issues, device being offline, or service problems. Please check your network connection and try again.",
+      "ssl_error": "SSL/Certificate error. The cloud service may be temporarily unavailable.",
+      "dns_error": "Cannot resolve cloud service address. Please check your internet connection.",
+      "cloud_unavailable": "Cloud service is temporarily unavailable. Please try again later.",
+      "unknown": "An unexpected error occurred. Please check the logs for more details and try again."
+    },
+    "abort": {
+      "already_configured": "This Judo iSoft system is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Judo iSoft Options",
+        "description": "Configure advanced options for your Judo iSoft integration.",
+        "data": {
+          "scan_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "scan_interval": "How often to update data from the system (30-300 seconds)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "water_hardness": {
+        "name": "Water Hardness"
+      },
+      "water_consumption": {
+        "name": "Water Consumption"
+      },
+      "salt_level": {
+        "name": "Salt Level"
+      },
+      "flow_rate": {
+        "name": "Flow Rate"
+      },
+      "system_pressure": {
+        "name": "System Pressure"
+      },
+      "filter_remaining": {
+        "name": "Filter Remaining"
+      },
+      "system_health": {
+        "name": "System Health"
+      },
+      "error_code": {
+        "name": "Error Code"
+      },
+      "last_regeneration": {
+        "name": "Last Regeneration"
+      },
+      "next_maintenance": {
+        "name": "Next Maintenance"
+      },
+      "connection_mode": {
+        "name": "Connection Mode"
+      }
+    },
+    "binary_sensor": {
+      "online": {
+        "name": "Online"
+      },
+      "alarm": {
+        "name": "Alarm"
+      },
+      "maintenance_required": {
+        "name": "Maintenance Required"
+      },
+      "regeneration_active": {
+        "name": "Regeneration Active"
+      },
+      "low_salt": {
+        "name": "Low Salt Level"
+      },
+      "filter_replacement": {
+        "name": "Filter Replacement Due"
+      }
+    }
+  },
+  "services": {
+    "start_regeneration": {
+      "name": "Start Regeneration",
+      "description": "Start a regeneration cycle on the water softener"
+    },
+    "stop_regeneration": {
+      "name": "Stop Regeneration",
+      "description": "Stop the current regeneration cycle"
+    },
+    "clear_alarm": {
+      "name": "Clear Alarm",
+      "description": "Clear the active system alarm"
+    },
+    "trigger_maintenance": {
+      "name": "Trigger Maintenance",
+      "description": "Set the maintenance required flag (for testing)"
+    },
+    "clear_maintenance": {
+      "name": "Clear Maintenance",
+      "description": "Clear the maintenance required flag"
+    },
+    "set_salt_level": {
+      "name": "Set Salt Level",
+      "description": "Set the salt level percentage (for testing/calibration)",
+      "fields": {
+        "salt_level": {
+          "name": "Salt Level",
+          "description": "Salt level percentage (0-100)"
+        }
+      }
+    },
+    "set_flow_rate": {
+      "name": "Set Flow Rate",
+      "description": "Set the current flow rate (for testing)",
+      "fields": {
+        "flow_rate": {
+          "name": "Flow Rate",
+          "description": "Flow rate in liters per minute (0-50)"
+        }
+      }
+    },
+    "set_water_hardness": {
+      "name": "Set Water Hardness",
+      "description": "Set the water hardness value",
+      "fields": {
+        "water_hardness": {
+          "name": "Water Hardness",
+          "description": "Water hardness in degrees German hardness (0-30)"
+        }
+      }
+    },
+    "reset_system": {
+      "name": "Reset System",
+      "description": "Reset the system to default state"
+    }
+  }
+}

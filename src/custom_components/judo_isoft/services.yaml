@@ -1,0 +1,94 @@
+start_regeneration:
+  name: Start Regeneration
+  description: Start a regeneration cycle on the water softener
+  target:
+    device:
+      integration: judo_isoft
+
+stop_regeneration:
+  name: Stop Regeneration
+  description: Stop the current regeneration cycle
+  target:
+    device:
+      integration: judo_isoft
+
+clear_alarm:
+  name: Clear Alarm
+  description: Clear the active system alarm
+  target:
+    device:
+      integration: judo_isoft
+
+trigger_maintenance:
+  name: Trigger Maintenance
+  description: Set the maintenance required flag (for testing)
+  target:
+    device:
+      integration: judo_isoft
+
+clear_maintenance:
+  name: Clear Maintenance
+  description: Clear the maintenance required flag
+  target:
+    device:
+      integration: judo_isoft
+
+set_salt_level:
+  name: Set Salt Level
+  description: Set the salt level percentage (for testing/calibration)
+  target:
+    device:
+      integration: judo_isoft
+  fields:
+    salt_level:
+      name: Salt Level
+      description: Salt level percentage (0-100)
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+set_flow_rate:
+  name: Set Flow Rate
+  description: Set the current flow rate (for testing)
+  target:
+    device:
+      integration: judo_isoft
+  fields:
+    flow_rate:
+      name: Flow Rate
+      description: Flow rate in liters per minute (0-50)
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 50
+          step: 0.1
+          unit_of_measurement: "L/min"
+
+set_water_hardness:
+  name: Set Water Hardness
+  description: Set the water hardness value
+  target:
+    device:
+      integration: judo_isoft
+  fields:
+    water_hardness:
+      name: Water Hardness
+      description: Water hardness in degrees German hardness (0-30)
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 30
+          step: 0.1
+          unit_of_measurement: "°dH"
+
+reset_system:
+  name: Reset System
+  description: Reset the system to default state
+  target:
+    device:
+      integration: judo_isoft

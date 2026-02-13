@@ -1,0 +1,17 @@
+# Example scenes for Judo iSoft integration development
+
+# Scene for normal operation
+- name: "Judo iSoft Normal Operation"
+  entities:
+    light.living_room:
+      state: on
+      brightness: 255
+      color_temp: 250
+      
+# Scene for maintenance mode
+- name: "Judo iSoft Maintenance Mode"
+  entities:
+    light.living_room:
+      state: on
+      brightness: 128
+      rgb_color: [255, 165, 0]  # Orange

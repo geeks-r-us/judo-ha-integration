@@ -1,0 +1,22 @@
+# Example scripts for Judo iSoft integration development
+
+# Script to force regeneration cycle (for testing)
+force_regeneration:
+  alias: "Force Judo iSoft Regeneration"
+  sequence:
+    - service: system_log.write
+      data:
+        message: "Force regeneration initiated for Judo iSoft system"
+        level: info
+        
+# Script to reset salt level (for testing)
+reset_salt_level:
+  alias: "Reset Salt Level Notification"
+  sequence:
+    - service: persistent_notification.dismiss
+      data:
+        notification_id: judo_isoft_low_salt
+    - service: system_log.write
+      data:
+        message: "Salt level notification reset"
+        level: info
