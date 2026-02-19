@@ -18,7 +18,7 @@ if [ -d "/workspaces/judo-ha-integration" ]; then
 
     echo "📦 Installing Python dependencies..."
     pip3 install --upgrade pip || echo "⚠️ Warning: Could not upgrade pip"
-
+    
     if [ -f "requirements-dev.txt" ]; then
         pip3 install -r requirements-dev.txt || echo "⚠️ Warning: Could not install all dev requirements"
     fi
@@ -26,8 +26,8 @@ if [ -d "/workspaces/judo-ha-integration" ]; then
     # Copy integration to custom_components
     echo "🔗 Linking integration to Home Assistant..."
     rm -rf /config/custom_components/judo_isoft
-    if [ -d "src/custom_components/judo_isoft" ]; then
-        ln -sf /workspaces/judo-ha-integration/src/custom_components/judo_isoft /config/custom_components/judo_isoft
+    if [ -d "custom_components/judo_isoft" ]; then
+        ln -sf /workspaces/judo-ha-integration/custom_components/judo_isoft /config/custom_components/judo_isoft
     else
         echo "⚠️ Warning: Integration source not found at expected location"
     fi
@@ -60,7 +60,7 @@ echo "🌐 Home Assistant will be available at: http://localhost:8123"
 echo "🔧 Mock Judo iSoft device available at: http://localhost:8080"
 echo "🐛 Python debugger available on port: 5678"
 echo ""
-echo "📁 Integration source: /workspaces/judo-ha-integration/src/custom_components/judo_isoft"
+echo "📁 Integration source: /workspaces/judo-ha-integration/custom_components/judo_isoft"
 echo "⚙️  HA config: /config"
 echo "🔗 Integration linked to: /config/custom_components/judo_isoft"
 echo ""

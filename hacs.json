@@ -1,7 +1,9 @@
 {
-  "name": "Judo iSoft",
+  "name": "Judo iSoft Water Treatment",
   "hacs": "1.6.0",
   "domains": ["sensor", "binary_sensor"],
   "iot_class": "Local Polling",
-  "homeassistant": "2023.1.0"
+  "homeassistant": "2023.1.0",
+  "render_readme": true,
+  "country": ["DE", "AT", "CH"]
 }

@@ -147,7 +147,7 @@ install_ha() {
     fi
 
     # Copy integration files
-    cp -r src/custom_components/judo_isoft "$TARGET_PATH"
+    cp -r custom_components/judo_isoft "$TARGET_PATH"
 
     print_success "Integration installed to $TARGET_PATH"
     print_warning "Please restart Home Assistant to load the integration"

@@ -22,7 +22,7 @@ services:
       - "5678:5678" # Python debugger port
     environment:
       - TZ=UTC
-      - PYTHONPATH=/workspaces/judo-ha-integration/src:/config/custom_components
+      - PYTHONPATH=/workspaces/judo-ha-integration:/config/custom_components
     stdin_open: true
     tty: true
     working_dir: /workspaces/judo-ha-integration

@@ -165,7 +165,7 @@ curl http://localhost:8123/api/states -H "Authorization: Bearer YOUR_TOKEN"
 
 ```
 /workspaces/judo-ha-integration/     # Your source code (synced)
-├── src/custom_components/judo_isoft/  # Integration source
+├── custom_components/judo_isoft/    # Integration source (HACS compliant)
 └── tests/                          # Tests
 
 /config/                             # Home Assistant config
@@ -187,7 +187,7 @@ Some changes require restarting Home Assistant:
 
 **Manual restart required:**
 - New entities
-- Config flow changes
+- Config flow changes  
 - Major structural changes
 - Manifest changes
 
@@ -196,7 +196,7 @@ Some changes require restarting Home Assistant:
 # Quick restart
 docker restart judo-isoft-homeassistant-dev
 
-# Or from HA UI:
+# Or from HA UI: 
 # Settings → System → Restart
 ```
 
@@ -212,7 +212,7 @@ docker restart judo-isoft-homeassistant-dev
 2. Trigger changes via mock device API
 3. Verify entity states update
 
-### Test Error Handling
+### Test Error Handling  
 1. Stop mock device: `docker stop judo-isoft-mock-device`
 2. Check entity availability
 3. Restart: `docker start judo-isoft-mock-device`
@@ -253,7 +253,7 @@ docker logs judo-isoft-homeassistant-dev | grep -i judo
 
 ### Mock Device Issues
 ```bash
-# Check mock device status
+# Check mock device status  
 curl http://localhost:8080/
 
 # Restart mock device
@@ -286,7 +286,7 @@ pre-commit install
 # Create realistic test scenario
 curl -X POST http://localhost:8080/api/control -H 'Content-Type: application/json' -d '{"command":"set_salt_level", "value":18}'
 curl -X POST http://localhost:8080/api/control -H 'Content-Type: application/json' -d '{"command":"trigger_maintenance"}'
-curl -X POST http://localhost:8080/api/control -H 'Content-Type: application/json' -d '{"command":"start_regeneration"}'
+curl -X POST http://localhost:8080/api/control -H 'Content-Type: application/json' -d '{"command":"start_regeneration"}' 
 ```
 
 ### VS Code Extensions

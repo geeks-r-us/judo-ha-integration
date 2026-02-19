@@ -6,15 +6,15 @@ Your Home Assistant integration for Judo iSoft water treatment systems has been 
 
 ```
 judo-ha-integration/
-├── src/custom_components/judo_isoft/     # Main integration code
-│   ├── __init__.py                       # Integration setup & coordinator
-│   ├── manifest.json                     # Integration metadata
-│   ├── const.py                         # Constants & configuration
-│   ├── api.py                           # API client for Judo iSoft
-│   ├── config_flow.py                   # Configuration UI
-│   ├── sensor.py                        # Sensor entities
-│   ├── binary_sensor.py                 # Binary sensor entities
-│   └── strings.json                     # UI translations
+├── custom_components/judo_isoft/       # Main integration code
+│   ├── __init__.py                      # Integration setup & coordinator
+│   ├── manifest.json                    # Integration metadata
+│   ├── const.py                        # Constants & configuration
+│   ├── api.py                          # API client for Judo iSoft
+│   ├── config_flow.py                  # Configuration UI
+│   ├── sensor.py                       # Sensor entities
+│   ├── binary_sensor.py                # Binary sensor entities
+│   └── strings.json                    # UI translations
 ├── tests/                               # Test suite
 ├── docs/                               # Documentation (includes API doc)
 ├── requirements.txt                    # Runtime dependencies

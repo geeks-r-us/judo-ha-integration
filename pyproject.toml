@@ -42,7 +42,7 @@ Repository = "https://github.com/geeks-r-us/judo-ha-integration"
 Issues = "https://github.com/geeks-r-us/judo-ha-integration/issues"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
 include = ["custom_components*"]
 
 [tool.black]
@@ -69,7 +69,7 @@ addopts = "--cov=custom_components --cov-report=html --cov-report=term-missing"
 asyncio_mode = "auto"
 
 [tool.coverage.run]
-source = ["src/custom_components"]
+source = ["custom_components"]
 
 [tool.coverage.report]
 exclude_lines = [

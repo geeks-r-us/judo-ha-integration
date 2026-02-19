@@ -1,6 +1,19 @@
-# Judo iSoft Home Assistant Integration
+# Judo iSoft Water Treatment Integration
+
+[![GitHub Release][releases-shield]][releases]
+[![GitHub Activity][commits-shield]][commits]
+[![License][license-shield]](LICENSE)
+[![hacs][hacsbadge]][hacs]
+[![Project Maintenance][maintenance-shield]][user_profile]
 
 A Home Assistant custom integration for Judo iSoft water treatment systems.
+
+**This component will set up the following platforms.**
+
+| Platform        | Description                                               |
+| --------------- | --------------------------------------------------------- |
+| `sensor`        | Water hardness, consumption, salt level, flow rate, etc. |
+| `binary_sensor` | System status, alarms, maintenance alerts                |
 
 ## Features
 
@@ -32,7 +45,11 @@ code .  # VS Code will prompt to open in devcontainer
 
 ### Manual Installation
 
-1. Copy the `custom_components/judo_isoft` folder to your Home Assistant `config/custom_components/` directory
+1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`)
+2. If you do not have a `custom_components` directory (folder) there, you need to create it
+3. In the `custom_components` directory (folder) create a new folder called `judo_isoft`
+4. Download _all_ the files from the `custom_components/judo_isoft/` directory (folder) in this repository
+5. Place the files you downloaded in the new directory (folder) you created
 2. Restart Home Assistant
 3. Go to Configuration → Integrations
 4. Click "+" and search for "Judo iSoft"
@@ -97,3 +114,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Support
 
 For issues and questions, please use the GitHub issue tracker.
+
+<!---->
+
+[commits-shield]: https://img.shields.io/github/commit-activity/y/geeks-r-us/judo-ha-integration.svg?style=for-the-badge
+[commits]: https://github.com/geeks-r-us/judo-ha-integration/commits/main
+[hacs]: https://hacs.xyz
+[hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/geeks-r-us/judo-ha-integration.svg?style=for-the-badge
+[maintenance-shield]: https://img.shields.io/badge/maintainer-geeks--r--us-blue.svg?style=for-the-badge
+[releases-shield]: https://img.shields.io/github/release/geeks-r-us/judo-ha-integration.svg?style=for-the-badge
+[releases]: https://github.com/geeks-r-us/judo-ha-integration/releases
+[user_profile]: https://github.com/geeks-r-us

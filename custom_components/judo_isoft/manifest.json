@@ -1,0 +1,14 @@
+{
+  "domain": "judo_isoft",
+  "name": "Judo iSoft Water Treatment",
+  "codeowners": ["@geeks-r-us"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/geeks-r-us/judo-ha-integration",
+  "homeassistant": "2023.1.0",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/geeks-r-us/judo-ha-integration/issues",
+  "requirements": ["aiohttp>=3.8.0"],
+  "version": "1.0.0",
+  "zeroconf": []
+}

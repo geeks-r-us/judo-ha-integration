@@ -3,15 +3,15 @@
 ## Fixed Issues
 
 ### ✅ Alpine Linux Package Manager
-**Problem:** `apt-get` commands failed with exit code 127
+**Problem:** `apt-get` commands failed with exit code 127  
 **Solution:** Updated Dockerfile to use Alpine Linux's `apk` package manager instead of `apt-get`
 
 ### ✅ Improved Error Handling
-**Problem:** Setup scripts could fail silently
+**Problem:** Setup scripts could fail silently  
 **Solution:** Added error handling and fallbacks in setup scripts
 
 ### ✅ Port Forwarding
-**Problem:** Mock device port not exposed
+**Problem:** Mock device port not exposed  
 **Solution:** Added port 8080 forwarding for mock Judo device
 
 ## Quick Fixes
@@ -84,7 +84,7 @@ docker logs -f judo-isoft-homeassistant-dev
 # Enter HA container
 docker exec -it judo-isoft-homeassistant-dev bash
 
-# Enter mock device container
+# Enter mock device container  
 docker exec -it judo-isoft-mock-device sh
 
 # Restart all services
