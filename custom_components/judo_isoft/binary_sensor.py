@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
@@ -14,9 +13,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import BINARY_SENSOR_TYPES, DOMAIN, MANUFACTURER, MODEL
+from .const import DOMAIN, MANUFACTURER, MODEL
 
-_LOGGER = logging.getLogger(__name__)
+
+ONLINE_FIELD_KEY = "device_online"
 
 
 async def async_setup_entry(
@@ -24,113 +24,119 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Judo iSoft binary sensor based on a config entry."""
+    """Set up Judo iSoft dynamic binary sensors from decoded snapshot fields."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-    for sensor_type in BINARY_SENSOR_TYPES:
-        entities.append(JudoiSoftBinarySensor(coordinator, entry, sensor_type))
-
+    entities: list[BinarySensorEntity] = []
+    for field in coordinator.data.get("fields", []):
+        if not isinstance(field.get("value"), bool):
+            continue
+        if field.get("key") == ONLINE_FIELD_KEY:
+            continue
+        entities.append(JudoiSoftDynamicBinarySensor(coordinator, entry, field))
+    entities.append(JudoiSoftOnlineBinarySensor(coordinator, entry))
     async_add_entities(entities)
 
 
-class JudoiSoftBinarySensor(CoordinatorEntity, BinarySensorEntity):
-    """Representation of a Judo iSoft binary sensor."""
+class _BaseBinarySensor(CoordinatorEntity, BinarySensorEntity):
+    """Common binary sensor behavior."""
 
-    def __init__(
-        self, coordinator, config_entry: ConfigEntry, sensor_type: str
-    ) -> None:
-        """Initialize the binary sensor."""
+    def __init__(self, coordinator, config_entry: ConfigEntry) -> None:
         super().__init__(coordinator)
         self.config_entry = config_entry
-        self._sensor_type = sensor_type
-        self._attr_name = f"{MODEL} {BINARY_SENSOR_TYPES[sensor_type]['name']}"
-        self._attr_unique_id = f"{config_entry.entry_id}_{sensor_type}"
-        self._attr_icon = BINARY_SENSOR_TYPES[sensor_type]["icon"]
-
-        # Set device class if available
-        if BINARY_SENSOR_TYPES[sensor_type]["device_class"]:
-            self._attr_device_class = BinarySensorDeviceClass(
-                BINARY_SENSOR_TYPES[sensor_type]["device_class"]
-            )
 
     @property
     def device_info(self) -> dict[str, Any]:
         """Return device information."""
-        device_data = self.coordinator.data.get("system_status", {})
+        device_data = self.coordinator.data.get("device_info", {})
+        system_data = self.coordinator.data.get("system_status", {})
         return {
             "identifiers": {(DOMAIN, self.config_entry.entry_id)},
-            "name": f"{MANUFACTURER} {MODEL}",
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-            "sw_version": device_data.get("firmware_version"),
-            "hw_version": device_data.get("hardware_version"),
-            "serial_number": device_data.get("serial_number"),
+            "name": f"{MANUFACTURER} {device_data.get('model', MODEL)}",
+            "manufacturer": device_data.get("manufacturer", MANUFACTURER),
+            "model": device_data.get("model", MODEL),
+            "sw_version": device_data.get("firmware_version")
+            or system_data.get("firmware_version"),
+            "hw_version": device_data.get("hardware_version")
+            or system_data.get("hardware_version"),
+            "serial_number": device_data.get("serial_number")
+            or system_data.get("serial_number"),
         }
+
+
+class JudoiSoftDynamicBinarySensor(_BaseBinarySensor):
+    """Dynamic binary sensor for boolean decoded fields."""
+
+    def __init__(
+        self, coordinator, config_entry: ConfigEntry, field: dict[str, Any]
+    ) -> None:
+        super().__init__(coordinator, config_entry)
+        self._field_key = field["key"]
+        self._source_command = field.get("source_command")
+        self._attr_name = field.get("name") or self._field_key.replace("_", " ").title()
+        self._attr_unique_id = (
+            f"{config_entry.entry_id}_{config_entry.data.get('host', 'device')}_"
+            f"{self._field_key}_{self._source_command}"
+        )
+        self._attr_icon = field.get("icon")
+
+        device_class = field.get("device_class")
+        if device_class:
+            try:
+                self._attr_device_class = BinarySensorDeviceClass(device_class)
+            except ValueError:
+                self._attr_device_class = None
 
     @property
     def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
-        if not self.coordinator.data:
+        """Return boolean state."""
+        value = (
+            self.coordinator.data.get("fields_by_key", {})
+            .get(self._field_key, {})
+            .get("value")
+        )
+        if value is None:
             return None
-
-        system_data = self.coordinator.data.get("system_status", {})
-        maintenance_data = self.coordinator.data.get("maintenance_data", {})
-
-        if self._sensor_type == "online":
-            return system_data.get("online", False)
-        elif self._sensor_type == "alarm":
-            return system_data.get("alarm", False)
-        elif self._sensor_type == "maintenance_required":
-            return system_data.get("maintenance_required", False)
-        elif self._sensor_type == "regeneration_active":
-            return system_data.get("regeneration_active", False)
-        elif self._sensor_type == "low_salt":
-            salt_level = maintenance_data.get("salt_level", 100)
-            return salt_level < 20  # Consider low if below 20%
-        elif self._sensor_type == "filter_replacement":
-            days_remaining = maintenance_data.get("filter_remaining", 365)
-            return days_remaining <= 7  # Warning when 7 days or less remaining
-
-        return None
+        return bool(value)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return additional state attributes."""
-        attrs = {}
-
-        system_data = self.coordinator.data.get("system_status", {})
-
-        # Add last update time if available
-        if last_update := system_data.get("last_update"):
-            attrs["last_update"] = last_update
-
-        # Add error code for alarm sensor
-        if self._sensor_type == "alarm":
-            if error_code := system_data.get("error_code"):
-                attrs["error_code"] = error_code
-
-        # Add maintenance info for maintenance sensor
-        if self._sensor_type == "maintenance_required":
-            maintenance_data = self.coordinator.data.get("maintenance_data", {})
-            if next_maintenance := maintenance_data.get("next_maintenance"):
-                attrs["next_maintenance"] = next_maintenance
-
-        return attrs
+        field = self.coordinator.data.get("fields_by_key", {}).get(self._field_key, {})
+        return {
+            "source_command": field.get("source_command"),
+            "raw_hex": field.get("raw_hex"),
+            "transport": self.coordinator.data.get("connection", {}).get("transport"),
+        }
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-        # Online sensor should always be available to show connection status
-        if self._sensor_type == "online":
-            return (
-                self.coordinator.last_update_success
-                and self.coordinator.data is not None
-            )
-
-        # Other sensors require system to be online
+        """Return whether entity is available."""
         return (
-            self.coordinator.last_update_success
-            and self.coordinator.data is not None
-            and self.coordinator.data.get("system_status", {}).get("online", False)
+            self.coordinator.last_update_success and self.coordinator.data is not None
         )
+
+
+class JudoiSoftOnlineBinarySensor(_BaseBinarySensor):
+    """Connectivity of the Judo device (cloud status or successful local read)."""
+
+    _attr_name = "Online"
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+
+    def __init__(self, coordinator, config_entry: ConfigEntry) -> None:
+        super().__init__(coordinator, config_entry)
+        self._attr_unique_id = f"{config_entry.entry_id}_online"
+
+    @property
+    def available(self) -> bool:
+        """Always available: a failed update is reported as offline."""
+        return True
+
+    @property
+    def is_on(self) -> bool:
+        """Return whether the device is reachable."""
+        if not self.coordinator.last_update_success or not self.coordinator.data:
+            return False
+        field = self.coordinator.data.get("fields_by_key", {}).get(ONLINE_FIELD_KEY, {})
+        value = field.get("value")
+        return True if value is None else bool(value)

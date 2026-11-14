@@ -5,6 +5,7 @@
 set -e
 
 echo "🚀 Setting up Judo iSoft HA Integration development environment..."
+echo "👤 Running as UID:GID $(id -u):$(id -g)"
 
 # Create necessary directories
 mkdir -p /config/custom_components
@@ -17,10 +18,8 @@ if [ -d "/workspaces/judo-ha-integration" ]; then
     cd /workspaces/judo-ha-integration
 
     echo "📦 Installing Python dependencies..."
-    pip3 install --upgrade pip || echo "⚠️ Warning: Could not upgrade pip"
-    
     if [ -f "requirements-dev.txt" ]; then
-        pip3 install -r requirements-dev.txt || echo "⚠️ Warning: Could not install all dev requirements"
+        /opt/devenv/bin/pip install -r requirements-dev.txt || echo "⚠️ Warning: Could not install all dev requirements"
     fi
 
     # Copy integration to custom_components
@@ -40,9 +39,6 @@ if [ -d "/workspaces/judo-ha-integration" ]; then
 else
     echo "⚠️ Warning: Workspace directory not found"
 fi
-
-# Set proper permissions
-chown -R root:root /config 2>/dev/null || true
 
 # Create a simple test configuration file
 echo "📝 Creating test configuration..."

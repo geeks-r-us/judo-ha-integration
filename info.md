@@ -10,18 +10,19 @@ _Integration to integrate with [Judo iSoft][judo_isoft] water treatment systems.
 
 Platform | Description
 -- | --
-`sensor` | Show info from Judo iSoft water treatment system (water hardness, consumption, salt level, flow rate, system pressure, filter status).
-`binary_sensor` | Show status from Judo iSoft water treatment system (online, alarm, maintenance required, regeneration active).
+`sensor` | Water consumption, hardness (per water scene), salt, service and leakage protection settings, device info.
+`binary_sensor` | Online, vacation mode active, emergency power module, device flags.
+`number` / `select` / `button` | Target hardness, hardness unit, command buttons.
 
 ## Features
 
-- **Real-time monitoring** of your Judo iSoft water treatment system
-- **Water quality sensors** - hardness, consumption, flow rate, pressure
-- **System status indicators** - online status, alarms, maintenance alerts
-- **Salt and filter monitoring** - track salt levels and filter replacement needs
-- **Regeneration cycle tracking** - monitor when the system is regenerating
+- **Monitoring** of your Judo iSoft water treatment system: consumption, salt, service intervals, leakage protection settings
+- **Water scenes** - hardness per scene and the active scene
+- **Energy dashboard ready** - total water sensor with the `water` device class
 - **Easy configuration** through the Home Assistant UI
-- **Local polling** - no cloud dependency, works entirely local
+- **Local or cloud** - local REST if your device supports it, otherwise the myJUDO cloud account
+
+Requires Home Assistant **2024.11.0** or newer.
 
 ## Installation
 
@@ -44,31 +45,60 @@ Platform | Description
 
 ## Configuration
 
-1. In the Home Assistant UI go to "Configuration" -> "Integrations"
-2. Click the "+" button and search for "Judo iSoft Water Treatment"
-3. Enter the IP address of your Judo iSoft system
-4. Configure the polling interval (optional, defaults to 60 seconds)
-5. Click "Submit"
+1. Go to Settings → Devices & services → Add integration
+2. Search for "Judo iSoft Water Treatment"
+3. **Cloud:** leave host empty (or `cloud.device`) and enter your myJUDO user name and password
+   **Local:** enter the IP address and port of the device (needs a module with the local `/api/rest` interface)
+4. Optional: set the polling interval in the integration options (30-300 s, default 60 s)
+
+> The eWAC connectivity module with firmware 1.14 has no local REST interface; use the cloud mode there.
 
 ## Entities
 
 ### Sensors
 
-- **Water Hardness** - Current water hardness in °dH
-- **Water Consumption** - Total water consumption in liters
-- **Salt Level** - Current salt level in %
-- **Flow Rate** - Current water flow rate in L/min
-- **System Pressure** - Current system pressure in bar
-- **Filter Remaining** - Days until filter replacement needed
+Created dynamically from the decoded device data, so the exact list depends on the model and
+connection. For an i-soft SAFE+ via the cloud you get, for example:
+
+| Group | Sensors |
+| --- | --- |
+| Water | Total water (L and m³), soft water (L and m³). The litre sensors have the `water` device class and can be used in the Energy dashboard. |
+| Hardness | Target hardness, hardness per water scene (shower, garden, heating fill, washing, normal), active water scene |
+| Salt | Salt weight (g/kg), salt range (days), estimated salt level (%) |
+| Service | Regeneration count, maintenance count, days/hours until next maintenance |
+| Leakage protection | Max. draw duration (min), max. draw volume (L), max. flow (L/h), vacation mode type, sleep mode duration (h) |
+| Device | Firmware, device number, connectivity module version, battery capacity (%), battery runtime (min) |
+
+There is **no live flow rate, pressure or temperature**: the i-soft does not report them.
+For a flow estimate create a *Derivative* helper on the total water sensor.
 
 ### Binary Sensors
 
-- **Online** - System connectivity status
-- **Alarm** - System alarm status
-- **Maintenance Required** - Maintenance alert status
-- **Regeneration Active** - Regeneration cycle status
+- **Online** - device reachable (cloud status, or successful local read); off when an update fails
+- **Vacation mode active**
+- **Emergency power module** - present
+- Alarm / maintenance / regeneration flags where the device reports them
+
+### Number, Select, Button
+
+- **Target hardness** (number), **hardness unit** (select)
+- Buttons for writable commands, e.g. start regeneration
+
+### Services
+
+`judo_isoft.execute_command` - read or write any protocol command (`command`, optional `value`, `device_id`, `transport`).
+
+> Some values are inferred from a single device and are not covered by the official command list.
+> See [docs/VERIFICATION.md](docs/VERIFICATION.md) for what is confirmed against the Judo app.
+
+### Water consumption per day
+
+Add a *Utility Meter* helper (Settings → Devices & services → Helpers) with the total water sensor
+as source and a daily cycle. For the Energy dashboard use the total water (L) sensor directly.
 
 ## Automation Examples
+
+Entity IDs depend on the device name; pick yours in the automation editor.
 
 ### Low Salt Alert
 ```yaml
@@ -76,28 +106,28 @@ automation:
   - alias: "Low Salt Alert"
     trigger:
       - platform: numeric_state
-        entity_id: sensor.judo_isoft_salt_level
+        entity_id: sensor.judo_wasseraufbereitung_gmbh_judo_i_soft_salt_level_estimated
         below: 20
     action:
       - service: notify.mobile_app_your_phone
         data:
           title: "Judo iSoft - Low Salt"
-          message: "Salt level is {{ states('sensor.judo_isoft_salt_level') }}%. Please refill."
+          message: "Salt level is {{ states('sensor.judo_wasseraufbereitung_gmbh_judo_i_soft_salt_level_estimated') }}%. Please refill."
 ```
 
-### Maintenance Required
+### Maintenance Due
 ```yaml
 automation:
-  - alias: "Maintenance Required"
+  - alias: "Maintenance Due"
     trigger:
-      - platform: state
-        entity_id: binary_sensor.judo_isoft_maintenance_required
-        to: "on"
+      - platform: numeric_state
+        entity_id: sensor.judo_wasseraufbereitung_gmbh_judo_i_soft_safe_maintenance_days_remaining
+        below: 30
     action:
       - service: persistent_notification.create
         data:
           title: "Judo iSoft Maintenance"
-          message: "Your water treatment system requires maintenance."
+          message: "Next maintenance in {{ states('sensor.judo_wasseraufbereitung_gmbh_judo_i_soft_safe_maintenance_days_remaining') }} days."
 ```
 
 ## Support

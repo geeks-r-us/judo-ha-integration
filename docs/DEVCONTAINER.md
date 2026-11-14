@@ -61,7 +61,7 @@ After the devcontainer starts:
 
 1. **Test the mock device:**
 ```bash
-curl http://localhost:8080/api/status
+curl http://localhost:8080/api/rest/FF00
 ```
 
 2. **Configure the integration:**
@@ -112,25 +112,22 @@ curl http://localhost:8080/
 
 **Trigger test scenarios:**
 ```bash
-# Trigger alarm
-curl -X POST http://localhost:8080/api/control \
-  -H 'Content-Type: application/json' \
-  -d '{"command":"trigger_alarm"}'
+# Read device type
+curl http://localhost:8080/api/rest/FF00
 
-# Set low salt level
-curl -X POST http://localhost:8080/api/control \
-  -H 'Content-Type: application/json' \
-  -d '{"command":"set_salt_level", "value":15}'
+# Read total water
+curl http://localhost:8080/api/rest/2800
+
+# Write target hardness to 10 dH
+curl http://localhost:8080/api/rest/30000A00
 
 # Start regeneration
-curl -X POST http://localhost:8080/api/control \
-  -H 'Content-Type: application/json' \
-  -d '{"command":"start_regeneration"}'
+curl http://localhost:8080/api/rest/350000
 ```
 
 **View current mock state:**
 ```bash
-curl http://localhost:8080/api/control
+curl http://localhost:8080/
 ```
 
 ## 🐛 Debugging
@@ -284,9 +281,9 @@ pre-commit install
 ### Mock Device Scenarios
 ```bash
 # Create realistic test scenario
-curl -X POST http://localhost:8080/api/control -H 'Content-Type: application/json' -d '{"command":"set_salt_level", "value":18}'
-curl -X POST http://localhost:8080/api/control -H 'Content-Type: application/json' -d '{"command":"trigger_maintenance"}'
-curl -X POST http://localhost:8080/api/control -H 'Content-Type: application/json' -d '{"command":"start_regeneration"}' 
+curl http://localhost:8080/api/rest/56004448
+curl http://localhost:8080/api/rest/4000F401
+curl http://localhost:8080/api/rest/350000
 ```
 
 ### VS Code Extensions

@@ -33,12 +33,6 @@ script: !include scripts.yaml
 # Example scene yaml
 scene: !include scenes.yaml
 
-# Home Assistant Cloud
-cloud:
-
-# Enable developer tools
-developer:
-
 # Logger configuration for development
 logger:
   default: info
@@ -63,38 +57,12 @@ http:
     - 192.168.0.0/16
     - 10.0.0.0/8
 
-# Text to speech
-tts:
-  - platform: google_translate
-
-# Example binary sensors for development
-binary_sensor:
-  - platform: template
-    sensors:
-      development_mode:
-        friendly_name: "Development Mode"
-        value_template: "true"
-
-# Example sensors for development  
-sensor:
-  - platform: template
-    sensors:
-      dev_timestamp:
-        friendly_name: "Development Timestamp"
-        value_template: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
-        
-  - platform: time_date
-    display_options:
-      - 'time'
-      - 'date'
-      - 'date_time'
-      - 'time_date'
-
-# Enable debug in development
-debug:
-
-# Enable profiler for performance testing
-profiler:
+# Water consumption per day (resets at midnight), source: Judo total water counter
+utility_meter:
+  judo_water_daily:
+    name: Judo Wasser Tagesverbrauch
+    source: sensor.water_total_l
+    cycle: daily
 
 # Enable diagnostics
 diagnostics:

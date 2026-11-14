@@ -12,15 +12,25 @@ A Home Assistant custom integration for Judo iSoft water treatment systems.
 
 | Platform        | Description                                               |
 | --------------- | --------------------------------------------------------- |
-| `sensor`        | Water hardness, consumption, salt level, flow rate, etc. |
-| `binary_sensor` | System status, alarms, maintenance alerts                |
+| `sensor`        | Consumption, hardness, salt, service and leakage settings |
+| `binary_sensor` | Online, vacation mode, emergency power module, flags      |
+| `button`        | Explicit and capability-generated command actions         |
+| `number`        | Writable target hardness                                  |
+| `select`        | Writable hardness unit                                    |
 
 ## Features
 
-- Monitor water treatment system status
-- Track water consumption and treatment statistics
-- Real-time system monitoring and alerts
+- Monitor water consumption, salt, service intervals and leakage protection settings
+- Energy dashboard ready: total water sensor with the `water` device class
+- Local REST or myJUDO cloud connection
+- Requires Home Assistant 2024.11.0 or newer
 - Configuration through Home Assistant UI
+- Internal `judo_client` stack with command-level decoding
+- Shared protocol command catalog with family composition blocks and overrides
+- Dynamic entities generated from decoded command fields
+- Generic service `judo_isoft.execute_command` for protocol read/write operations
+- Capability metadata (`payload_length`, `default_write_value`) for safe write UX
+- Generated command buttons for writable commands with safe payload behavior
 
 ## Installation
 
@@ -50,10 +60,10 @@ code .  # VS Code will prompt to open in devcontainer
 3. In the `custom_components` directory (folder) create a new folder called `judo_isoft`
 4. Download _all_ the files from the `custom_components/judo_isoft/` directory (folder) in this repository
 5. Place the files you downloaded in the new directory (folder) you created
-2. Restart Home Assistant
-3. Go to Configuration → Integrations
-4. Click "+" and search for "Judo iSoft"
-5. Follow the configuration steps
+6. Restart Home Assistant
+7. Go to Settings → Devices & services → Add integration
+8. Search for "Judo iSoft"
+9. Follow the configuration steps
 
 ### HACS Installation
 
@@ -67,25 +77,53 @@ This integration can be installed through HACS (Home Assistant Community Store):
 
 ## Configuration
 
-The integration requires:
-- Judo iSoft system IP address
-- API credentials (if applicable)
-- Polling interval (default: 60 seconds)
+1. Settings → Devices & services → Add integration → "Judo iSoft"
+2. **Cloud (default for the eWAC connectivity module):** leave host empty or `cloud.device`, enter your myJUDO user name and password
+3. **Local:** IP address and port of a device that exposes the `/api/rest` interface
+4. Polling interval is configurable in the integration options (30-300 s, default 60 s)
 
 ## Supported Entities
 
 ### Sensors
-- Water hardness
-- Water consumption
-- System status
-- Filter status
-- Salt level
-- Error codes
+
+Created dynamically from the decoded device data, so the exact list depends on the model and
+connection. For an i-soft SAFE+ via the cloud you get, for example:
+
+| Group | Sensors |
+| --- | --- |
+| Water | Total water (L and m³), soft water (L and m³). The litre sensors have the `water` device class and can be used in the Energy dashboard. |
+| Hardness | Target hardness, hardness per water scene (shower, garden, heating fill, washing, normal), active water scene |
+| Salt | Salt weight (g/kg), salt range (days), estimated salt level (%) |
+| Service | Regeneration count, maintenance count, days/hours until next maintenance |
+| Leakage protection | Max. draw duration (min), max. draw volume (L), max. flow (L/h), vacation mode type, sleep mode duration (h) |
+| Device | Firmware, device number, connectivity module version, battery capacity (%), battery runtime (min) |
+
+There is **no live flow rate, pressure or temperature**: the i-soft does not report them.
+For a flow estimate create a *Derivative* helper on the total water sensor.
 
 ### Binary Sensors
-- System online status
-- Alarm status
-- Maintenance required
+
+- **Online** - device reachable (cloud status, or successful local read); off when an update fails
+- **Vacation mode active**
+- **Emergency power module** - present
+- Alarm / maintenance / regeneration flags where the device reports them
+
+### Number, Select, Button
+
+- **Target hardness** (number), **hardness unit** (select)
+- Buttons for writable commands, e.g. start regeneration
+
+### Services
+
+`judo_isoft.execute_command` - read or write any protocol command (`command`, optional `value`, `device_id`, `transport`).
+
+> Some values are inferred from a single device and are not covered by the official command list.
+> See [docs/VERIFICATION.md](docs/VERIFICATION.md) for what is confirmed against the Judo app.
+
+### Water consumption per day
+
+Add a *Utility Meter* helper (Settings → Devices & services → Helpers) with the total water sensor
+as source and a daily cycle. For the Energy dashboard use the total water (L) sensor directly.
 
 ## Development
 

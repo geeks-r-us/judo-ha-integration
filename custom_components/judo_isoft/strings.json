@@ -107,59 +107,27 @@
     }
   },
   "services": {
-    "start_regeneration": {
-      "name": "Start Regeneration",
-      "description": "Start a regeneration cycle on the water softener"
-    },
-    "stop_regeneration": {
-      "name": "Stop Regeneration",
-      "description": "Stop the current regeneration cycle"
-    },
-    "clear_alarm": {
-      "name": "Clear Alarm",
-      "description": "Clear the active system alarm"
-    },
-    "trigger_maintenance": {
-      "name": "Trigger Maintenance",
-      "description": "Set the maintenance required flag (for testing)"
-    },
-    "clear_maintenance": {
-      "name": "Clear Maintenance",
-      "description": "Clear the maintenance required flag"
-    },
-    "set_salt_level": {
-      "name": "Set Salt Level",
-      "description": "Set the salt level percentage (for testing/calibration)",
+    "execute_command": {
+      "name": "Execute Command",
+      "description": "Execute a generic Judo protocol command (read/write)",
       "fields": {
-        "salt_level": {
-          "name": "Salt Level",
-          "description": "Salt level percentage (0-100)"
+        "device_id": {
+          "name": "Device ID",
+          "description": "Optional device id (defaults to first discovered device)"
+        },
+        "command": {
+          "name": "Command",
+          "description": "Command ID as int or hex string (e.g. 40 or 0x28)"
+        },
+        "value": {
+          "name": "Value",
+          "description": "Optional value for write operations"
+        },
+        "transport": {
+          "name": "Transport",
+          "description": "Transport mode: auto, local, cloud"
         }
       }
-    },
-    "set_flow_rate": {
-      "name": "Set Flow Rate",
-      "description": "Set the current flow rate (for testing)",
-      "fields": {
-        "flow_rate": {
-          "name": "Flow Rate",
-          "description": "Flow rate in liters per minute (0-50)"
-        }
-      }
-    },
-    "set_water_hardness": {
-      "name": "Set Water Hardness",
-      "description": "Set the water hardness value",
-      "fields": {
-        "water_hardness": {
-          "name": "Water Hardness",
-          "description": "Water hardness in degrees German hardness (0-30)"
-        }
-      }
-    },
-    "reset_system": {
-      "name": "Reset System",
-      "description": "Reset the system to default state"
     }
   }
 }

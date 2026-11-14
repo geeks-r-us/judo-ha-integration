@@ -1,0 +1,356 @@
+{
+  "info": {
+    "_postman_id": "e12f9e45-834e-4b53-b3f5-6f41c9a6b002",
+    "name": "Judo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman requests for Judo local `/api/rest` and Judo cloud interface authentication and command testing."
+  },
+  "variable": [
+    {
+      "key": "cloud_base_url",
+      "value": "https://www.myjudo.eu/interface"
+    },
+    {
+      "key": "local_base_url",
+      "value": "http://device.local:80"
+    },
+    {
+      "key": "username",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    },
+    {
+      "key": "password_md5",
+      "value": ""
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "sn",
+      "value": ""
+    },
+    {
+      "key": "serialnumber",
+      "value": ""
+    },
+    {
+      "key": "ewuid",
+      "value": ""
+    },
+    {
+      "key": "cloud_cmd",
+      "value": "3000"
+    },
+    {
+      "key": "cloud_data",
+      "value": "0A00"
+    },
+    {
+      "key": "local_cmd",
+      "value": "30"
+    },
+    {
+      "key": "local_payload",
+      "value": "0A00"
+    }
+  ],
+  "item": [
+    {
+      "name": "Cloud",
+      "item": [
+        {
+          "name": "Cloud Login",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const password = pm.environment.get('password') || pm.collectionVariables.get('password') || '';",
+                  "pm.variables.set('password_md5', CryptoJS.MD5(password).toString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = {};",
+                  "try { body = pm.response.json(); } catch (e) {}",
+                  "if (body.token) {",
+                  "  pm.environment.set('token', String(body.token));",
+                  "}",
+                  "pm.test('Token returned', function () {",
+                  "  pm.expect(body.token).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{cloud_base_url}}?group=register&command=login&name=login&user={{username}}&password={{password_md5}}&nohash=Service&role=customer",
+              "host": [
+                "{{cloud_base_url}}"
+              ],
+              "query": [
+                {
+                  "key": "group",
+                  "value": "register"
+                },
+                {
+                  "key": "command",
+                  "value": "login"
+                },
+                {
+                  "key": "name",
+                  "value": "login"
+                },
+                {
+                  "key": "user",
+                  "value": "{{username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password_md5}}"
+                },
+                {
+                  "key": "nohash",
+                  "value": "Service"
+                },
+                {
+                  "key": "role",
+                  "value": "customer"
+                }
+              ]
+            },
+            "description": "Cloud login used by the integration. Password is MD5-hashed before sending."
+          },
+          "response": []
+        },
+        {
+          "name": "Cloud Get Device Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{cloud_base_url}}?group=register&command=get%20device%20data&token={{token}}",
+              "host": [
+                "{{cloud_base_url}}"
+              ],
+              "query": [
+                {
+                  "key": "group",
+                  "value": "register"
+                },
+                {
+                  "key": "command",
+                  "value": "get device data"
+                },
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            },
+            "description": "Read the cloud payload. Extract `sn`, `serialnumber`, and optional `ewuid` from the response for later writes."
+          },
+          "response": []
+        },
+        {
+          "name": "Cloud Set Device Data (Generic)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{cloud_base_url}}?group=register&command=set%20device%20data&token={{token}}&cmd={{cloud_cmd}}&data={{cloud_data}}&sn={{sn}}&serialnumber={{serialnumber}}&ewuid={{ewuid}}",
+              "host": [
+                "{{cloud_base_url}}"
+              ],
+              "query": [
+                {
+                  "key": "group",
+                  "value": "register"
+                },
+                {
+                  "key": "command",
+                  "value": "set device data"
+                },
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                },
+                {
+                  "key": "cmd",
+                  "value": "{{cloud_cmd}}"
+                },
+                {
+                  "key": "data",
+                  "value": "{{cloud_data}}"
+                },
+                {
+                  "key": "sn",
+                  "value": "{{sn}}"
+                },
+                {
+                  "key": "serialnumber",
+                  "value": "{{serialnumber}}"
+                },
+                {
+                  "key": "ewuid",
+                  "value": "{{ewuid}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Generic cloud write. For target hardness the current integration uses `cmd=3000` and a hex payload such as `07`, `0A`, or `0A00`."
+          },
+          "response": []
+        },
+        {
+          "name": "Cloud Set Target Hardness 10 dH",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{cloud_base_url}}?group=register&command=set%20device%20data&token={{token}}&cmd=3000&data=0A00&sn={{sn}}&serialnumber={{serialnumber}}&ewuid={{ewuid}}",
+              "host": [
+                "{{cloud_base_url}}"
+              ],
+              "query": [
+                {
+                  "key": "group",
+                  "value": "register"
+                },
+                {
+                  "key": "command",
+                  "value": "set device data"
+                },
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                },
+                {
+                  "key": "cmd",
+                  "value": "3000"
+                },
+                {
+                  "key": "data",
+                  "value": "0A00"
+                },
+                {
+                  "key": "sn",
+                  "value": "{{sn}}"
+                },
+                {
+                  "key": "serialnumber",
+                  "value": "{{serialnumber}}"
+                },
+                {
+                  "key": "ewuid",
+                  "value": "{{ewuid}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Concrete target-hardness example matching the current integration compatibility path."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Local",
+      "item": [
+        {
+          "name": "Local Read Command (Generic)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{local_base_url}}/api/rest/{{local_cmd}}00",
+              "host": [
+                "{{local_base_url}}"
+              ],
+              "path": [
+                "api",
+                "rest",
+                "{{local_cmd}}00"
+              ]
+            },
+            "description": "Generic local read using `/api/rest/<CMD>00`."
+          },
+          "response": []
+        },
+        {
+          "name": "Local Write Command (Generic)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{local_base_url}}/api/rest/{{local_cmd}}00{{local_payload}}",
+              "host": [
+                "{{local_base_url}}"
+              ],
+              "path": [
+                "api",
+                "rest",
+                "{{local_cmd}}00{{local_payload}}"
+              ]
+            },
+            "description": "Generic local write using `/api/rest/<CMD>00<PAYLOAD>`."
+          },
+          "response": []
+        },
+        {
+          "name": "Local Read Target Hardness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{local_base_url}}/api/rest/5100",
+              "host": [
+                "{{local_base_url}}"
+              ],
+              "path": [
+                "api",
+                "rest",
+                "5100"
+              ]
+            },
+            "description": "Read target hardness locally."
+          },
+          "response": []
+        },
+        {
+          "name": "Local Write Target Hardness 10 dH",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{local_base_url}}/api/rest/30000A00",
+              "host": [
+                "{{local_base_url}}"
+              ],
+              "path": [
+                "api",
+                "rest",
+                "30000A00"
+              ]
+            },
+            "description": "Write target hardness locally using the documented `/api/rest/30000A00` form."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

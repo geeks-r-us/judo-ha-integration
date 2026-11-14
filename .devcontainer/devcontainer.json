@@ -23,7 +23,7 @@
                 "lukas-reineke.indent-blRainbow"
             ],
             "settings": {
-                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.defaultInterpreterPath": "/opt/devenv/bin/python",
                 "python.formatting.provider": "black",
                 "python.linting.enabled": true,
                 "python.linting.pylintEnabled": true,
@@ -57,8 +57,10 @@
             "onAutoForward": "silent"
         }
     },
+    "initializeCommand": "bash -lc 'printf \"LOCAL_UID=%s\\nLOCAL_GID=%s\\n\" \"$(id -u)\" \"$(id -g)\" > .devcontainer/.env'",
     "postCreateCommand": "bash .devcontainer/setup.sh",
     "postStartCommand": "bash .devcontainer/start.sh",
-    "remoteUser": "root",
-    "containerUser": "root"
+    "remoteUser": "vscode",
+    "containerUser": "vscode",
+    "updateRemoteUserUID": true
 }
