@@ -251,6 +251,7 @@ class JudoiSoftUpdateCoordinator(DataUpdateCoordinator):
         scan_interval: timedelta,
     ) -> None:
         self.api = api
+        self._last_message_id: int | None = None
         super().__init__(
             hass,
             _LOGGER,
@@ -258,6 +259,34 @@ class JudoiSoftUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=scan_interval,
         )
+
+    def _fire_message_events(self, messages: list[dict[str, Any]]) -> None:
+        """Fire `judo_isoft_message` for messages that appeared since the last update.
+
+        The first update only sets the baseline so the existing history is not replayed.
+        """
+        if not messages:
+            return
+        newest_id = max(m["id"] for m in messages)
+        if self._last_message_id is not None:
+            new_messages = sorted(
+                (m for m in messages if m["id"] > self._last_message_id),
+                key=lambda m: m["id"],
+            )
+            for message in new_messages:
+                self.hass.bus.async_fire(
+                    f"{DOMAIN}_message",
+                    {
+                        "message_id": message["id"],
+                        "type": message["type"],
+                        "code": message["code"],
+                        "text": message["text"],
+                        "timestamp": message["timestamp"],
+                        "confirmed": message["confirmed"],
+                        "param": message["param"],
+                    },
+                )
+        self._last_message_id = max(newest_id, self._last_message_id or 0)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via API client."""
@@ -284,6 +313,8 @@ class JudoiSoftUpdateCoordinator(DataUpdateCoordinator):
                     ),
                 }
                 health_data = await self.api.get_system_health()
+                messages = snapshot.get("messages", [])
+                self._fire_message_events(messages)
 
                 return {
                     "device_info": snapshot.get("device_info", {}),
@@ -299,6 +330,7 @@ class JudoiSoftUpdateCoordinator(DataUpdateCoordinator):
                     "fields": fields,
                     "fields_by_key": fields_by_key,
                     "capabilities": snapshot.get("capabilities", []),
+                    "messages": messages,
                     "updated_at": snapshot.get("updated_at"),
                 }
         except Exception as err:

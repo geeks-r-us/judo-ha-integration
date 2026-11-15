@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, MANUFACTURER, MODEL
 
@@ -97,11 +98,14 @@ class JudoiSoftDynamicSensor(_BaseSensor):
     @property
     def native_value(self) -> Any:
         """Return state value from latest snapshot."""
-        return (
+        value = (
             self.coordinator.data.get("fields_by_key", {})
             .get(self._field_key, {})
             .get("value")
         )
+        if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
+            return dt_util.parse_datetime(value) if isinstance(value, str) else None
+        return value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

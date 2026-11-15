@@ -107,3 +107,29 @@ def test_online_binary_sensor_reflects_device_and_update_state() -> None:
     coordinator.last_update_success = False
     assert sensor.is_on is False
     assert sensor.available is True
+
+
+def test_coordinator_fires_events_only_for_new_messages() -> None:
+    """History is not replayed; only messages newer than the baseline fire events."""
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+
+    from custom_components.judo_isoft import JudoiSoftUpdateCoordinator
+
+    def msg(message_id):
+        return {
+            "id": message_id, "type": "w", "code": 251, "text": "t",
+            "timestamp": None, "confirmed": False, "param": None,
+        }
+
+    coordinator = SimpleNamespace(hass=MagicMock(), _last_message_id=None)
+    fire = JudoiSoftUpdateCoordinator._fire_message_events
+
+    fire(coordinator, [msg(2), msg(1)])
+    coordinator.hass.bus.async_fire.assert_not_called()  # baseline only
+    assert coordinator._last_message_id == 2
+
+    fire(coordinator, [msg(4), msg(3), msg(2), msg(1)])
+    ids = [c.args[1]["message_id"] for c in coordinator.hass.bus.async_fire.call_args_list]
+    assert ids == [3, 4]
+    assert coordinator.hass.bus.async_fire.call_args_list[0].args[0] == "judo_isoft_message"

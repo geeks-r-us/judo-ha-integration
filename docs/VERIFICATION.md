@@ -25,6 +25,8 @@ Legende: ✅ bestätigt · 🟡 plausibel, aber nur eine Messung / geraten · �
 - [x] ✅ Gerätenummer `cloud_node_id` (Kommando `0x03`): 123456
 - [x] ✅ Hardware 5.10 und Connectivity-Modul 1.14
 
+- [x] ✅ Meldungen (`get error messages`): 22 Einträge seit 2023 gelesen. Zeitstempel sind deutsche Ortszeit (wird nach UTC umgerechnet). Meldung 251 „Urlaubsmodus: reduzierte Grenzwerte“ am 2026-11-15 02:27 passt zum aktiven Urlaubsmodus U1.
+
 ## Offen: ohne Eingriff, nur abwarten
 
 | | Wert | Aktuell | Gegenprobe | Erwartung |

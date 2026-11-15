@@ -178,6 +178,7 @@ class JudoiSoftAPI:
             "updated_at": snapshot.updated_at,
             "device_info": device_info,
             "system_status": system_status,
+            "messages": snapshot.raw.get("messages", []),
             "raw": snapshot.raw,
         }
 

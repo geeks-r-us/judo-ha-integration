@@ -1320,3 +1320,34 @@ async def test_cloud_write_maps_command_ids_to_register_indexes() -> None:
     assert calls == {74: "7800", 65: ""}
 
     await client.close()
+
+
+def test_parse_messages_converts_time_and_describes_codes() -> None:
+    """Cloud message log is normalized: UTC time, text and newest first."""
+    from custom_components.judo_isoft.judo_client.messages import parse_messages
+
+    payload = {
+        "data": [
+            {
+                "id": 1122705, "serialnumber": "S1", "type": "w", "error": 23,
+                "confirm_status": 1, "ts_sort": "2026-06-28 12:37:37.000000", "param": "",
+            },
+            {
+                "id": 1303996, "serialnumber": "S1", "type": "w", "error": 251,
+                "confirm_status": 0, "ts_sort": "2026-11-15 02:27:50.000000", "param": "1",
+            },
+            {
+                "id": 5, "serialnumber": "OTHER", "type": "e", "error": 1,
+                "confirm_status": 0, "ts_sort": "2026-11-16 10:00:00.000000", "param": "",
+            },
+        ]
+    }
+
+    messages = parse_messages(payload, "S1")
+
+    assert [m["id"] for m in messages] == [1303996, 1122705]
+    assert messages[0]["text"] == "Vacation mode: reduced limits"
+    assert messages[0]["timestamp"] == "2026-11-15T01:27:50+00:00"  # CET -> UTC
+    assert messages[0]["confirmed"] is False
+    assert messages[0]["param"] == "1"
+    assert messages[1]["confirmed"] is True

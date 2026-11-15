@@ -68,6 +68,7 @@ connection. For an i-soft SAFE+ via the cloud you get, for example:
 | Service | Regeneration count, maintenance count, days/hours until next maintenance |
 | Leakage protection | Max. draw duration (min), max. draw volume (L), max. flow (L/h), vacation mode type, sleep mode duration (h) |
 | Device | Firmware, device number, connectivity module version, battery capacity (%), battery runtime (min) |
+| Messages | Last message (text), last message time, number of unconfirmed messages (cloud only) |
 
 There is **no live flow rate, pressure or temperature**: the i-soft does not report them.
 For a flow estimate create a *Derivative* helper on the total water sensor.
@@ -83,6 +84,20 @@ For a flow estimate create a *Derivative* helper on the total water sensor.
 
 - **Target hardness** (number), **hardness unit** (select)
 - Buttons for writable commands, e.g. start regeneration
+
+### Events
+
+New device messages (cloud only) fire the event `judo_isoft_message` with `message_id`, `type`
+(`w` notice, `e` error), `code`, `text`, `timestamp`, `confirmed` and `param`. The messages that
+already exist when Home Assistant starts are not replayed.
+
+```yaml
+trigger:
+  - platform: event
+    event_type: judo_isoft_message
+    event_data:
+      code: 27   # maintenance due
+```
 
 ### Services
 

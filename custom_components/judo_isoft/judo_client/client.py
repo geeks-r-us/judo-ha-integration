@@ -8,6 +8,7 @@ import re
 from typing import Any
 
 from .ha_mapping import normalize_field
+from .messages import parse_messages
 from .models import (
     CommandResult,
     DecodedCommandResult,
@@ -806,6 +807,37 @@ class JudoClient:
                 )
             )
 
+        if transport_mode == TransportMode.CLOUD:
+            messages = await self._read_messages(device.serial_number)
+            if messages:
+                raw_bundle["messages"] = messages
+                newest = messages[0]
+                fields.append(
+                    DecodedField(
+                        key="last_message",
+                        value=newest["text"],
+                        name="Last Message",
+                        source_command=0x00,
+                    )
+                )
+                fields.append(
+                    DecodedField(
+                        key="last_message_time",
+                        value=newest["timestamp"],
+                        name="Last Message Time",
+                        source_command=0x00,
+                        device_class="timestamp",
+                    )
+                )
+                fields.append(
+                    DecodedField(
+                        key="unconfirmed_messages",
+                        value=sum(1 for m in messages if not m["confirmed"]),
+                        name="Unconfirmed Messages",
+                        source_command=0x00,
+                    )
+                )
+
         # Normalize and deduplicate by key (last value wins).
         dedup: dict[str, DecodedField] = {}
         for field in fields:
@@ -819,6 +851,15 @@ class JudoClient:
             capabilities=capabilities,
             raw=raw_bundle,
         )
+
+    async def _read_messages(self, serial: str | None) -> list[dict[str, Any]]:
+        """Read the cloud message log; failures must not break the snapshot."""
+        try:
+            payload = await self._transport.read_cloud_messages()
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("Reading cloud messages failed: %s", err)
+            return []
+        return parse_messages(payload, serial)
 
     def _decode_cloud_payload(
         self,

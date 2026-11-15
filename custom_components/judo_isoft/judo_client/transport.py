@@ -210,6 +210,22 @@ class JudoTransport:
             params["token"] = token
             return await self.request_cloud("GET", params=params)
 
+    async def read_cloud_messages(self) -> dict[str, Any]:
+        """Read the device message log (`get error messages`)."""
+        auth = await self.authenticator()
+        token = await auth.ensure_token()
+        params = {
+            "group": "register",
+            "command": "get error messages",
+            "token": token,
+        }
+        try:
+            return await self.request_cloud("GET", params=params)
+        except JudoTransportError:
+            auth.clear_token()
+            params["token"] = await auth.ensure_token()
+            return await self.request_cloud("GET", params=params)
+
     async def write_cloud_register(
         self,
         *,
