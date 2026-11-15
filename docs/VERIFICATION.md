@@ -19,7 +19,7 @@ Legende: ✅ bestätigt · 🟡 plausibel, aber nur eine Messung / geraten · �
 - [x] ✅ Max. Entnahmemenge `leakage_max_volume_l` (Blockoffset 78): 900 l, auch Wechsel auf 1000 l und zurück
 - [x] ✅ Max. Durchfluss `leakage_max_flow_lph` (Blockoffset 76): 4000 l/h
 - [x] ✅ Urlaubsmodus-Typ `vacation_mode_type` (Blockoffset 82, Rohwerte 0/3/5/9 = U0/U1/U2/U3): U1 und U2 getestet. Laut Judo-Handbuch schaltet der Leckageschutz nach 72 h ohne Verbrauch in den gewählten Modus: U1 = 6 min / 50 l / 500 l/h, U2 = 12 min / 100 l / 1000 l/h, U3 = Leckageschutz geschlossen.
-- [x] ✅ Sleepmodusdauer `sleep_mode_duration_h` (Blockoffset 83): 2 h und 3 h getestet
+- [x] ✅ Sleepmodusdauer `sleep_mode_duration_h` (Blockoffset 83): 2 h und 3 h getestet. Laut Judo-Handbuch einstellbar von 1 bis 10 h. Im Sleepmodus ist die Entnahme innerhalb der Dauer nicht überwacht und der Leckageschutz schließt bei Überschreitung der Grenzwerte nicht.
 - [x] ✅ Wasserszene `water_scene`: normal
 - [x] ✅ Szenenhärten Duschen 4 / Garten 10 / Heizung 1 / Waschen 1 / Normal 8 °dH
 - [x] ✅ Gerätenummer `cloud_node_id` (Kommando `0x03`): 123456
