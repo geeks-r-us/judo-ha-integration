@@ -1096,444 +1096,11 @@ async def test_read_command_cloud_ff_falls_back_to_dt_when_missing() -> None:
     await client.close()
 
 
-@pytest.mark.asyncio
-async def test_write_command_cloud_success() -> None:
-    """Write command should route to cloud when requested."""
-    client = JudoClient(
-        host="cloud.device",
-        username="user",
-        password="pass",
-        force_cloud=True,
-    )
-
-    payload = {
-        "status": "ok",
-        "data": [
-            {
-                "serialnumber": "12345",
-                "data": [{"dt": "0x33", "data": {}}],
-            }
-        ],
-    }
-
-    with patch.object(
-        client._transport, "read_cloud_device_data", new=AsyncMock(return_value=payload)
-    ):
-        with patch.object(
-            client._transport,
-            "write_cloud_command",
-            new=AsyncMock(return_value={"status": "ok"}),
-        ) as cloud_write:
-            result = await client.write_command(
-                device_id="12345",
-                command_id="30",
-                value=10,
-                transport=TransportMode.CLOUD,
-            )
-
-    assert result.status == "ok"
-    assert result.transport == TransportMode.CLOUD
-    assert result.command_id == 0x30
-    assert cloud_write.await_count == 9
-    for index, args in enumerate(
-        [
-            (0x30, "0A", "12345", "12345", None),
-            (0x30, "0A", "12345", None, None),
-            (0x30, "0A", None, "12345", None),
-            (0x30, "0A", "12345", "12345", None),
-            (0x30, "0A", "12345", None, None),
-            (0x30, "0A", None, "12345", None),
-            (0x30, "0A", "12345", "12345", None),
-            (0x30, "0A", "12345", None, None),
-            (0x30, "0A", None, "12345", None),
-        ]
-    ):
-        assert cloud_write.await_args_list[index].args == args
-    for call in cloud_write.await_args_list[:3]:
-        assert call.kwargs["cmd_encoding"] == "hex"
-    for call in cloud_write.await_args_list[3:6]:
-        assert call.kwargs["cmd_encoding"] == "hex00"
-    for call in cloud_write.await_args_list[6:]:
-        assert call.kwargs["cmd_encoding"] == "rest_inline"
-
-    await client.close()
 
 
-@pytest.mark.asyncio
-async def test_write_command_cloud_preserves_distinct_sn_and_serialnumber() -> None:
-    """Cloud writes should fan out across distinct cloud target identifiers."""
-    client = JudoClient(
-        host="cloud.device",
-        username="user",
-        password="pass",
-        force_cloud=True,
-    )
-
-    payload = {
-        "status": "ok",
-        "data": [
-            {
-                "serialnumber": "739891554",
-                "data": [{"dt": "0x33", "sn": "123456", "data": {}}],
-            }
-        ],
-    }
-
-    with patch.object(
-        client._transport, "read_cloud_device_data", new=AsyncMock(return_value=payload)
-    ):
-        with patch.object(
-            client._transport,
-            "write_cloud_command",
-            new=AsyncMock(return_value={"status": "ok"}),
-        ) as cloud_write:
-            result = await client.write_command(
-                device_id="123456",
-                command_id="30",
-                value=10,
-                transport=TransportMode.CLOUD,
-            )
-
-    assert result.status == "ok"
-    assert result.transport == TransportMode.CLOUD
-    assert result.command_id == 0x30
-    assert cloud_write.await_count == 9
-    for index, args in enumerate(
-        [
-            (0x30, "0A", "123456", "739891554", None),
-            (0x30, "0A", "123456", None, None),
-            (0x30, "0A", None, "739891554", None),
-            (0x30, "0A", "123456", "739891554", None),
-            (0x30, "0A", "123456", None, None),
-            (0x30, "0A", None, "739891554", None),
-            (0x30, "0A", "123456", "739891554", None),
-            (0x30, "0A", "123456", None, None),
-            (0x30, "0A", None, "739891554", None),
-        ]
-    ):
-        assert cloud_write.await_args_list[index].args == args
-    for call in cloud_write.await_args_list[:3]:
-        assert call.kwargs["cmd_encoding"] == "hex"
-    for call in cloud_write.await_args_list[3:6]:
-        assert call.kwargs["cmd_encoding"] == "hex00"
-    for call in cloud_write.await_args_list[6:]:
-        assert call.kwargs["cmd_encoding"] == "rest_inline"
-
-    await client.close()
 
 
-@pytest.mark.asyncio
-async def test_write_command_cloud_retries_target_hardness_without_ewuid() -> None:
-    """Target hardness writes should also try cloud variants without ewuid."""
-    client = JudoClient(
-        host="cloud.device",
-        username="user",
-        password="pass",
-        force_cloud=True,
-    )
 
-    payload = {
-        "status": "ok",
-        "data": [
-            {
-                "serialnumber": "739891554",
-                "ewuid": "aabbccddeeff",
-                "data": [
-                    {
-                        "dt": "0x33",
-                        "sn": "123456",
-                        "ewuid": "aabbccddeeff",
-                        "data": {},
-                    }
-                ],
-            }
-        ],
-    }
-
-    with patch.object(
-        client._transport, "read_cloud_device_data", new=AsyncMock(return_value=payload)
-    ):
-        with patch.object(
-            client._transport,
-            "write_cloud_command",
-            new=AsyncMock(return_value={"status": "ok"}),
-        ) as cloud_write:
-            result = await client.write_command(
-                device_id="123456",
-                command_id="30",
-                value=10,
-                transport=TransportMode.CLOUD,
-            )
-
-    assert result.status == "ok"
-    assert result.transport == TransportMode.CLOUD
-    assert result.command_id == 0x30
-    assert cloud_write.await_count == 18
-    for index, args in enumerate(
-        [
-            (0x30, "0A", "123456", "739891554", "aabbccddeeff"),
-            (0x30, "0A", "123456", "739891554", None),
-            (0x30, "0A", "123456", None, "aabbccddeeff"),
-            (0x30, "0A", "123456", None, None),
-            (0x30, "0A", None, "739891554", "aabbccddeeff"),
-            (0x30, "0A", None, "739891554", None),
-            (0x30, "0A", "123456", "739891554", "aabbccddeeff"),
-            (0x30, "0A", "123456", "739891554", None),
-            (0x30, "0A", "123456", None, "aabbccddeeff"),
-            (0x30, "0A", "123456", None, None),
-            (0x30, "0A", None, "739891554", "aabbccddeeff"),
-            (0x30, "0A", None, "739891554", None),
-            (0x30, "0A", "123456", "739891554", "aabbccddeeff"),
-            (0x30, "0A", "123456", "739891554", None),
-            (0x30, "0A", "123456", None, "aabbccddeeff"),
-            (0x30, "0A", "123456", None, None),
-            (0x30, "0A", None, "739891554", "aabbccddeeff"),
-            (0x30, "0A", None, "739891554", None),
-        ]
-    ):
-        assert cloud_write.await_args_list[index].args == args
-    for call in cloud_write.await_args_list[:6]:
-        assert call.kwargs["cmd_encoding"] == "hex"
-    for call in cloud_write.await_args_list[6:12]:
-        assert call.kwargs["cmd_encoding"] == "hex00"
-    for call in cloud_write.await_args_list[12:]:
-        assert call.kwargs["cmd_encoding"] == "rest_inline"
-
-    await client.close()
-
-
-@pytest.mark.asyncio
-async def test_write_command_cloud_status_error_is_reported() -> None:
-    """Semantic cloud write errors should not be treated as success."""
-    client = JudoClient(
-        host="cloud.device",
-        username="user",
-        password="pass",
-        force_cloud=True,
-    )
-
-    payload = {
-        "status": "ok",
-        "data": [
-            {
-                "serialnumber": "12345",
-                "data": [{"dt": "0x33", "data": {}}],
-            }
-        ],
-    }
-
-    with patch.object(
-        client._transport, "read_cloud_device_data", new=AsyncMock(return_value=payload)
-    ):
-        with patch.object(
-            client._transport,
-            "write_cloud_command",
-            new=AsyncMock(return_value={"status": "error", "error": "write denied"}),
-        ):
-            result = await client.write_command(
-                device_id="12345",
-                command_id="30",
-                value=10,
-                transport=TransportMode.CLOUD,
-            )
-
-    assert result.status == "error"
-    assert result.transport == TransportMode.CLOUD
-    assert result.command_id == 0x30
-    assert result.error == "write denied"
-
-    await client.close()
-
-
-@pytest.mark.asyncio
-async def test_write_command_auto_falls_back_to_cloud_on_local_status_error() -> None:
-    """AUTO writes should fall back to cloud when local write returns status error."""
-    client = JudoClient(host="device.local")
-
-    descriptor = DeviceDescriptor(
-        device_id="12345",
-        family=DeviceFamily.ISOFT,
-        device_type="0x33",
-        serial_number="12345",
-        model="Judo i_soft",
-    )
-
-    with patch.object(
-        client, "discover_devices", new=AsyncMock(return_value=[descriptor])
-    ):
-        with patch.object(
-            client._transport,
-            "write_local_command",
-            new=AsyncMock(return_value={"status": "error", "error": "write denied"}),
-        ) as local_write:
-            with patch.object(
-                client._transport,
-                "write_cloud_command",
-                new=AsyncMock(return_value={"status": "ok"}),
-            ) as cloud_write:
-                result = await client.write_command(
-                    device_id="12345",
-                    command_id="30",
-                    value=10,
-                    transport=TransportMode.AUTO,
-                )
-
-    assert result.status == "ok"
-    assert result.transport == TransportMode.CLOUD
-    assert result.command_id == 0x30
-    local_write.assert_awaited_once()
-    assert cloud_write.await_count == 9
-    for index, args in enumerate(
-        [
-            (0x30, "0A", "12345", "12345", None),
-            (0x30, "0A", "12345", None, None),
-            (0x30, "0A", None, "12345", None),
-            (0x30, "0A", "12345", "12345", None),
-            (0x30, "0A", "12345", None, None),
-            (0x30, "0A", None, "12345", None),
-            (0x30, "0A", "12345", "12345", None),
-            (0x30, "0A", "12345", None, None),
-            (0x30, "0A", None, "12345", None),
-        ]
-    ):
-        assert cloud_write.await_args_list[index].args == args
-    for call in cloud_write.await_args_list[:3]:
-        assert call.kwargs["cmd_encoding"] == "hex"
-    for call in cloud_write.await_args_list[3:6]:
-        assert call.kwargs["cmd_encoding"] == "hex00"
-    for call in cloud_write.await_args_list[6:]:
-        assert call.kwargs["cmd_encoding"] == "rest_inline"
-
-    await client.close()
-
-
-@pytest.mark.asyncio
-async def test_write_command_cloud_retries_with_decimal_cmd_on_indeterminate_ack() -> None:
-    """Cloud write should retry with decimal cmd when ack has no status."""
-    client = JudoClient(
-        host="cloud.device",
-        username="user",
-        password="pass",
-        force_cloud=True,
-    )
-
-    payload = {
-        "status": "ok",
-        "data": [
-            {
-                "serialnumber": "12345",
-                "data": [{"dt": "0x33", "data": {}}],
-            }
-        ],
-    }
-
-    with patch.object(
-        client._transport, "read_cloud_device_data", new=AsyncMock(return_value=payload)
-    ):
-        with patch.object(
-            client._transport,
-            "write_cloud_command",
-            new=AsyncMock(
-                side_effect=[
-                    {"value": None, "_source": "cloud"},
-                    {"value": None, "_source": "cloud"},
-                    {"value": None, "_source": "cloud"},
-                    {"value": None, "_source": "cloud"},
-                    {"value": None, "_source": "cloud"},
-                    {"value": None, "_source": "cloud"},
-                    {"value": None, "_source": "cloud"},
-                    {"value": None, "_source": "cloud"},
-                    {"value": None, "_source": "cloud"},
-                    {"status": "ok"},
-                    {"status": "ok"},
-                    {"status": "ok"},
-                ]
-            ),
-        ) as cloud_write:
-            result = await client.write_command(
-                device_id="12345",
-                command_id="30",
-                value=10,
-                transport=TransportMode.CLOUD,
-            )
-
-    assert result.status == "ok"
-    assert result.transport == TransportMode.CLOUD
-    assert result.command_id == 0x30
-    assert cloud_write.await_count == 12
-    for call in cloud_write.await_args_list[:3]:
-        assert call.kwargs["cmd_encoding"] == "hex"
-    for call in cloud_write.await_args_list[3:6]:
-        assert call.kwargs["cmd_encoding"] == "hex00"
-    for call in cloud_write.await_args_list[6:9]:
-        assert call.kwargs["cmd_encoding"] == "rest_inline"
-    for call in cloud_write.await_args_list[9:]:
-        assert call.kwargs["cmd_encoding"] == "dec"
-
-    await client.close()
-
-
-@pytest.mark.asyncio
-async def test_write_command_cloud_does_not_retry_decimal_after_explicit_hex_success() -> None:
-    """Explicit non-decimal success should not trigger an unnecessary decimal retry."""
-    client = JudoClient(
-        host="cloud.device",
-        username="user",
-        password="pass",
-        force_cloud=True,
-    )
-
-    payload = {
-        "status": "ok",
-        "data": [
-            {
-                "serialnumber": "12345",
-                "data": [{"dt": "0x33", "data": {}}],
-            }
-        ],
-    }
-
-    with patch.object(
-        client._transport, "read_cloud_device_data", new=AsyncMock(return_value=payload)
-    ):
-        with patch.object(
-            client._transport,
-            "write_cloud_command",
-            new=AsyncMock(return_value={"status": "ok"}),
-        ) as cloud_write:
-            result = await client.write_command(
-                device_id="12345",
-                command_id="30",
-                value=10,
-                transport=TransportMode.CLOUD,
-            )
-
-    assert result.status == "ok"
-    assert result.transport == TransportMode.CLOUD
-    assert result.command_id == 0x30
-    assert cloud_write.await_count == 9
-    for index, args in enumerate(
-        [
-            (0x30, "0A", "12345", "12345", None),
-            (0x30, "0A", "12345", None, None),
-            (0x30, "0A", None, "12345", None),
-            (0x30, "0A", "12345", "12345", None),
-            (0x30, "0A", "12345", None, None),
-            (0x30, "0A", None, "12345", None),
-            (0x30, "0A", "12345", "12345", None),
-            (0x30, "0A", "12345", None, None),
-            (0x30, "0A", None, "12345", None),
-        ]
-    ):
-        assert cloud_write.await_args_list[index].args == args
-    for call in cloud_write.await_args_list[:3]:
-        assert call.kwargs["cmd_encoding"] == "hex"
-    for call in cloud_write.await_args_list[3:6]:
-        assert call.kwargs["cmd_encoding"] == "hex00"
-    for call in cloud_write.await_args_list[6:]:
-        assert call.kwargs["cmd_encoding"] == "rest_inline"
-
-    await client.close()
 
 
 @pytest.mark.asyncio
@@ -1668,5 +1235,88 @@ async def test_read_snapshot_real_isoft_safe_plus_cloud_payload() -> None:
     assert fields["water_scene_garden_hardness"] == 10.0
     assert fields["water_scene_heater_hardness"] == 1.0
     assert fields["water_scene_washing_hardness"] == 1.0
+
+    await client.close()
+
+
+async def test_cloud_target_hardness_write_uses_write_data_register() -> None:
+    """Cloud writes go through `write data` with the cloud register index (60)."""
+    client = JudoClient(
+        host="cloud.device", username="user", password="pass", force_cloud=True
+    )
+    payload = {
+        "data": [
+            {
+                "serialnumber": "aabbccddeeff",
+                "status": "online",
+                "data": [{"da": "0x1", "dt": "0x33", "data": {"1": {"data": "6E0203"}}}],
+            }
+        ]
+    }
+    write = AsyncMock(return_value={"status": "ok", "token": "t"})
+
+    with patch.object(
+        client._transport, "read_cloud_device_data", new=AsyncMock(return_value=payload)
+    ), patch.object(client._transport, "write_cloud_register", new=write):
+        result = await client.write_command("aabbccddeeff", 0x30, 9)
+
+    assert result.status == "ok"
+    write.assert_awaited_once_with(
+        serial_number="aabbccddeeff", dt="0x33", da="0x1", index=60, data_hex="09"
+    )
+
+    await client.close()
+
+
+async def test_cloud_write_status_error_is_reported() -> None:
+    """A non-ok cloud answer is reported as a write error."""
+    client = JudoClient(
+        host="cloud.device", username="user", password="pass", force_cloud=True
+    )
+    payload = {
+        "data": [
+            {
+                "serialnumber": "aabbccddeeff",
+                "data": [{"da": "0x1", "dt": "0x33", "data": {}}],
+            }
+        ]
+    }
+    write = AsyncMock(return_value={"status": "error", "error": "write denied"})
+
+    with patch.object(
+        client._transport, "read_cloud_device_data", new=AsyncMock(return_value=payload)
+    ), patch.object(client._transport, "write_cloud_register", new=write):
+        result = await client.write_command("aabbccddeeff", 0x30, 9)
+
+    assert result.status == "error"
+    assert result.transport == TransportMode.CLOUD
+    assert result.error == "write denied"
+
+    await client.close()
+
+
+async def test_cloud_write_maps_command_ids_to_register_indexes() -> None:
+    """Local command ids map to the cloud register indexes."""
+    client = JudoClient(
+        host="cloud.device", username="user", password="pass", force_cloud=True
+    )
+    payload = {
+        "data": [
+            {
+                "serialnumber": "aabbccddeeff",
+                "data": [{"da": "0x1", "dt": "0x33", "data": {}}],
+            }
+        ]
+    }
+    write = AsyncMock(return_value={"status": "ok"})
+
+    with patch.object(
+        client._transport, "read_cloud_device_data", new=AsyncMock(return_value=payload)
+    ), patch.object(client._transport, "write_cloud_register", new=write):
+        await client.write_command("aabbccddeeff", 0x3E, 120)  # max draw duration
+        await client.write_command("aabbccddeeff", 0x35, 0)  # start regeneration
+
+    calls = {c.kwargs["index"]: c.kwargs["data_hex"] for c in write.await_args_list}
+    assert calls == {74: "7800", 65: ""}
 
     await client.close()

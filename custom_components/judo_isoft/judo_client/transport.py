@@ -210,6 +210,53 @@ class JudoTransport:
             params["token"] = token
             return await self.request_cloud("GET", params=params)
 
+    async def write_cloud_register(
+        self,
+        *,
+        serial_number: str,
+        dt: str,
+        da: str,
+        index: int,
+        data_hex: str,
+    ) -> dict[str, Any]:
+        """Write one device register via the cloud `write data` command.
+
+        This is the call the JU-Control web app uses: the device identity (`dt`, `da`)
+        is passed exactly as reported by `get device data` and `index` is the cloud
+        register number (not the local REST command id).
+        """
+        auth = await self.authenticator()
+        session = await self.session()
+        for attempt in range(2):
+            token = await auth.ensure_token()
+            params = {
+                "group": "register",
+                "command": "write data",
+                "token": token,
+                "serial_number": serial_number,
+                "dt": dt,
+                "index": index,
+                "data": data_hex,
+                "da": da,
+                "role": "customer",
+            }
+            try:
+                async with session.get(
+                    self.CLOUD_BASE_URL, params=params, headers={"User-Agent": "Mozilla"}
+                ) as response:
+                    response.raise_for_status()
+                    data = await response.json(content_type=None)
+            except Exception as err:
+                raise JudoTransportError(f"Cloud write failed: {err}") from err
+            if not isinstance(data, dict):
+                raise JudoTransportError("Cloud write returned an unexpected answer")
+            if data.get("data") == "login failed" and attempt == 0:
+                auth.clear_token()
+                continue
+            data.setdefault("_source", "cloud")
+            return data
+        raise JudoTransportError("Cloud write failed after re-login")
+
     async def best_effort_mode(self) -> TransportMode:
         """Return preferred transport mode."""
         if self._force_cloud:

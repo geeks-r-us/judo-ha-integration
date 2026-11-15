@@ -39,6 +39,21 @@ class JudoClient:
     # Target hardness cloud writes do not have a reliable public cmd-token spec.
     # Try both plain hex (`30`) and REST-style (`3000`) variants before fallback.
     _CLOUD_MULTI_ENCODING_CMD_IDS = {0x30}
+    # Local REST command id -> cloud register index used by `write data`
+    # (target hardness verified on an i-soft SAFE+, the others follow the
+    # JU-Control register map used by other Judo cloud integrations).
+    _CLOUD_WRITE_INDEX = {
+        0x30: 60,  # target hardness
+        0x35: 65,  # start regeneration
+        0x3C: 72,  # close leakage protection valve
+        0x3D: 73,  # open leakage protection valve
+        0x3E: 74,  # max draw duration (16 bit in the cloud)
+        0x3F: 75,  # max flow
+        0x40: 76,  # max draw volume
+        0x41: 77,  # vacation mode
+        0x56: 94,  # salt stock
+    }
+    _CLOUD_EMPTY_DATA_CMD_IDS = {0x35}
     # Retry decimal command ids only when the primary cloud ack is indeterminate.
     _CLOUD_ALWAYS_DECIMAL_CMD_IDS: set[int] = set()
     _HEX_RE = re.compile(r"^[0-9a-fA-F]+$")
@@ -325,6 +340,9 @@ class JudoClient:
         ewuid: str | None,
     ) -> dict[str, Any]:
         """Write cloud command, retrying with decimal cmd id when ack is indeterminate."""
+        if command_id in self._CLOUD_WRITE_INDEX:
+            return await self._write_cloud_register(command_id, payload_hex, serialnumber or sn)
+
         targets = self._cloud_write_target_variants(
             command_id, sn, serialnumber, ewuid
         )
@@ -371,6 +389,46 @@ class JudoClient:
             return raw_hex
 
         return self._pick_preferred_cloud_write_result(raw_hex, raw_dec)
+
+    async def _write_cloud_register(
+        self, command_id: int, payload_hex: str, preferred_serial: str | None
+    ) -> dict[str, Any]:
+        """Write a register through the cloud `write data` command."""
+        payload = await self._transport.read_cloud_device_data()
+        device = self._select_cloud_device(payload, preferred_device_id=preferred_serial)
+        if not isinstance(device, dict):
+            raise RuntimeError("No cloud device available for write")
+
+        block = next(
+            (
+                b
+                for b in self._iter_cloud_device_data(device)
+                if isinstance(b, dict) and b.get("dt") is not None
+            ),
+            None,
+        )
+        serial = str(device.get("serialnumber") or preferred_serial or "").strip()
+        if block is None or not serial:
+            raise RuntimeError("Cloud device identity incomplete for write")
+
+        data_hex = "" if command_id in self._CLOUD_EMPTY_DATA_CMD_IDS else payload_hex
+        if command_id == 0x3E and len(data_hex) == 2:
+            data_hex = f"{data_hex}00"  # the cloud register is 16 bit wide
+
+        _LOGGER.debug(
+            "Cloud register write cmd=%02X index=%s data=%s serial=%s",
+            command_id,
+            self._CLOUD_WRITE_INDEX[command_id],
+            data_hex,
+            serial,
+        )
+        return await self._transport.write_cloud_register(
+            serial_number=serial,
+            dt=str(block.get("dt")),
+            da=str(block.get("da", "")),
+            index=self._CLOUD_WRITE_INDEX[command_id],
+            data_hex=data_hex,
+        )
 
     async def _write_cloud_command_with_encodings(
         self,
@@ -1423,8 +1481,11 @@ class JudoClient:
 
         Offsets verified against the Judo app on an i-soft SAFE+ (flow 4000 l/h,
         volume 900 l, duration 120 min): u16 at 76/78/80 (same order as command 0x50).
-        Byte 82 follows the 0x41 vacation flag layout (bit1=U1, bit2=U2, bit3=U3) and
-        byte 83 is the sleep duration in hours; those two are inferred from one sample.
+        Byte 82 follows the 0x41 vacation flag layout (bit1=U1, bit2=U2, bit3=U3; raw
+        0/3/5/9 = U0/U1/U2/U3, confirmed on U1 and U2) and byte 83 is the sleep duration
+        in hours. Judo's manual: after 72 h without consumption the protection switches to
+        the selected vacation mode (U1: 6 min / 50 L / 500 L/h, U2: 12 min / 100 L /
+        1000 L/h, U3: valve closed).
         """
         blob_hex = cls._extract_segmented_blob_hex_for_device(device)
         if not blob_hex:
@@ -1439,7 +1500,7 @@ class JudoClient:
         flags = payload[82]
         vacation = next(
             (name for bit, name in ((0x02, "U1"), (0x04, "U2"), (0x08, "U3")) if flags & bit),
-            "off",
+            "U0",
         )
         return [
             DecodedField(
@@ -1458,8 +1519,9 @@ class JudoClient:
                 key="vacation_mode_type", value=vacation,
                 name="Vacation Mode Type", source_command=0x41,
             ),
-            # Offsets 7 and 64 both flip 00 -> 01 when the vacation mode is activated
-            # in the app (observed twice); 64 is used since it starts a clean record.
+            # Offsets 7 and 64 both flip 00 -> 01 while the vacation mode is active
+            # (observed twice with U1, valve open). Other projects call byte 64 "valve
+            # closed", so it may also be set when the valve is closed (e.g. U3).
             DecodedField(
                 key="vacation_mode_active", value=payload[64] == 1,
                 name="Vacation Mode Active", source_command=0x41,

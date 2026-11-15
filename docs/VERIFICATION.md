@@ -18,7 +18,7 @@ Legende: ✅ bestätigt · 🟡 plausibel, aber nur eine Messung / geraten · �
 - [x] ✅ Max. Entnahmedauer `leakage_max_duration_min` (Blockoffset 80): 120 min (2 h)
 - [x] ✅ Max. Entnahmemenge `leakage_max_volume_l` (Blockoffset 78): 900 l, auch Wechsel auf 1000 l und zurück
 - [x] ✅ Max. Durchfluss `leakage_max_flow_lph` (Blockoffset 76): 4000 l/h
-- [x] ✅ Urlaubsmodus-Typ `vacation_mode_type` (Blockoffset 82, Bits 1 bis 3): U1 und U2 getestet
+- [x] ✅ Urlaubsmodus-Typ `vacation_mode_type` (Blockoffset 82, Rohwerte 0/3/5/9 = U0/U1/U2/U3): U1 und U2 getestet. Laut Judo-Handbuch schaltet der Leckageschutz nach 72 h ohne Verbrauch in den gewählten Modus: U1 = 6 min / 50 l / 500 l/h, U2 = 12 min / 100 l / 1000 l/h, U3 = Leckageschutz geschlossen.
 - [x] ✅ Sleepmodusdauer `sleep_mode_duration_h` (Blockoffset 83): 2 h und 3 h getestet
 - [x] ✅ Wasserszene `water_scene`: normal
 - [x] ✅ Szenenhärten Duschen 4 / Garten 10 / Heizung 1 / Waschen 1 / Normal 8 °dH
@@ -29,7 +29,7 @@ Legende: ✅ bestätigt · 🟡 plausibel, aber nur eine Messung / geraten · �
 
 | | Wert | Aktuell | Gegenprobe | Erwartung |
 |---|---|---|---|---|
-| 🟡 | `maintenance_days_remaining` / `_hours_remaining` (`0x07`, erstes Wort); Stunden zählen herunter (2403 → 2402 am 2026-11-15), App-Tageswert steht noch aus | 100 d / 2402 h | nach 1 bis 2 Tagen in HA und App ablesen | 99 d bzw. 2379 h |
+| ✅ | `maintenance_days_remaining` / `_hours_remaining` (`0x07`, erstes Wort); Stunden zählen 1 pro Stunde herunter (2403 → 2402 → 2390), abgerundet 99 d = App am 2026-11-15 | 99 d / 2390 h | erledigt | |
 | ⬜ | `maintenance_count` (`0x07`, zweites Wort) | 3 | nach der nächsten Wartung | 4 |
 | ⬜ | `regeneration_count` | 728 | nach der nächsten Regeneration | 729 |
 | ⬜ | `salt_weight_g` / `salt_days_remaining` | 22 750 g / 227 d | in 1 bis 2 Wochen | Werte fallen, App zeigt dasselbe |
@@ -41,7 +41,7 @@ Legende: ✅ bestätigt · 🟡 plausibel, aber nur eine Messung / geraten · �
 
 | | Wert | Aktuell | Umstellung | Erwartung |
 |---|---|---|---|---|
-| 🟡 | `vacation_mode_active` (Statusblock Offset 64) | False | Urlaubsmodus aktivieren | True. Offset 7 flippt gleichzeitig, beide sind bisher nicht unterscheidbar. Mit aktivem Urlaubsmodus auf U2/U3 wechseln, dann sieht man, welches Byte mitläuft. |
+| 🟡 | `vacation_mode_active` (Statusblock Offset 64) | False | Urlaubsmodus aktivieren | True (bei U1 mit offenem Ventil beobachtet). Offset 7 flippt gleichzeitig. Ein anderes Projekt nennt Byte 64 „Ventil geschlossen“: prüfen, ob es bei manuell geschlossenem Leckageschutz ebenfalls 1 wird. Mit U3 prüfen, welche Grenzwerte im aktiven Zustand gelten. |
 | ⬜ | Szenendauer (Duschen 2 h, Garten 2 h, Heizung 2 h, Waschen 1 h) | nicht gefunden | Szene aktivieren und prüfen, welche Felder sich füllen (`waterscene_time*`) | Dauer in den Cloud-Metadaten |
 | ⬜ | „Bedienung erlaubt" | nicht gefunden | Bedienung sperren, falls möglich | Kandidat: `disable_time` |
 

@@ -110,20 +110,20 @@ LEAKAGE_LIMIT_READ_WRITE_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         0x3F,
         _TEMPLATE_FAMILY,
-        "Max Draw Volume",
-        CommandDirection.READ_WRITE,
-        2,
-        encoder=encode_u16le,
-        unit="L",
-    ),
-    CommandSpec(
-        0x40,
-        _TEMPLATE_FAMILY,
         "Max Flow",
         CommandDirection.READ_WRITE,
         2,
         encoder=encode_u16le,
         unit="L/h",
+    ),
+    CommandSpec(
+        0x40,
+        _TEMPLATE_FAMILY,
+        "Max Draw Volume",
+        CommandDirection.READ_WRITE,
+        2,
+        encoder=encode_u16le,
+        unit="L",
     ),
 )
 
@@ -139,7 +139,7 @@ LEAKAGE_LIMIT_WRITE_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         0x3F,
         _TEMPLATE_FAMILY,
-        "Max Draw Volume",
+        "Max Flow",
         CommandDirection.WRITE,
         2,
         encoder=encode_u16le,
@@ -147,7 +147,7 @@ LEAKAGE_LIMIT_WRITE_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         0x40,
         _TEMPLATE_FAMILY,
-        "Max Flow",
+        "Max Draw Volume",
         CommandDirection.WRITE,
         2,
         encoder=encode_u16le,
