@@ -34,11 +34,21 @@ Legende: ✅ bestätigt · 🟡 plausibel, aber nur eine Messung / geraten · �
 |---|---|---|---|---|
 | ✅ | `maintenance_days_remaining` / `_hours_remaining` (`0x07`, erstes Wort); Stunden zählen 1 pro Stunde herunter (2403 → 2402 → 2390), abgerundet 99 d = App am 2026-11-15 | 99 d / 2390 h | erledigt | |
 | ⬜ | `maintenance_count` (`0x07`, zweites Wort) | 3 | nach der nächsten Wartung | 4 |
-| ⬜ | `regeneration_count` | 728 | nach der nächsten Regeneration | 729 |
+| ✅ | `regeneration_count` | 729 | erledigt: nach der aus HA gestarteten Regeneration von 728 auf 729 | |
 | ⬜ | `salt_weight_g` / `salt_days_remaining` | 22 750 g / 227 d | in 1 bis 2 Wochen | Werte fallen, App zeigt dasselbe |
 | 🟡 | `salt_level_pct`, Tankkapazität 50 kg angenommen (`SALT_TANK_CAPACITY_G`) | 45,5 % | genauen App-Prozentwert notieren und nach dem Nachfüllen vergleichen | App ≈ HA. Zeigt die App 50 %, wäre der Tank ca. 45 kg. |
 | ⬜ | `soft_water_m3` | 202,309 | App-Wert Weichwasser notieren | gleicher Wert |
 | 🟡 | `battery_runtime_min` (`0x5D`, Bytes 6 bis 7) | 2 min | beobachten, ob sich der Wert in der App ändert (z. B. nach einem Batterietest) | ändert sich nur die App, ist es Byte 0 statt Bytes 6 bis 7 |
+
+## Regeneration aktiv (Cloud-Statusblock)
+
+Die Cloud liefert kein eigenes Register für „Regeneration aktiv“ (lokal `0x04`). Vergleich Statusblock 790 bis 792
+während der laufenden Regeneration (2 Abrufe, 2026-11-15 ca. 17:45 UTC) und danach (Display wieder dunkel):
+
+- 🟡 Offset 68: 3 und 7 während des Laufs, 0 danach. Kandidat für Phase/Schritt der Regeneration.
+- 🟡 Offset 16: 0x73, 0x74 während des Laufs, 0 danach. Kandidat für Fortschritt/Zeit.
+- Offset 70 (0x74 → 0), 88 (6 → 0), 14, 22, 28, 30, 36, 40, 41, 50, 65: unterscheiden sich vorher/nachher, könnten aber auch das Ergebnis der Regeneration (Zeitpunkt, Dauer) sein.
+- Zeitreihe fehlt: der Beobachter lief auf einen Fehler, weil Register 793 und 794 `None` liefern. Bei der nächsten Regeneration minütlich aufzeichnen, dann zeigt sich, welches Feld nur während des Laufs gesetzt ist.
 
 ## Offen: in der App umstellen, danach Rohdaten vergleichen
 
