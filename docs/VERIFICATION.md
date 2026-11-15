@@ -22,6 +22,7 @@ Legende: ✅ bestätigt · 🟡 plausibel, aber nur eine Messung / geraten · �
 - [x] ✅ Sleepmodusdauer `sleep_mode_duration_h` (Blockoffset 83): 2 h und 3 h getestet. Laut Judo-Handbuch einstellbar von 1 bis 10 h. Im Sleepmodus ist die Entnahme innerhalb der Dauer nicht überwacht und der Leckageschutz schließt bei Überschreitung der Grenzwerte nicht.
 - [x] ✅ Wasserszene `water_scene`: normal
 - [x] ✅ Szenenhärten Duschen 4 / Garten 10 / Heizung 1 / Waschen 1 / Normal 8 °dH
+- [x] ✅ Regeneration starten (Button in HA, Cloud `write data`, Register 65 ohne Daten): vom Nutzer am 2026-11-15 ausgelöst, das Gerät hat reagiert. Danach `regeneration_count` auf 729 prüfen.
 - [x] ✅ Gerätenummer `cloud_node_id` (Kommando `0x03`): 123456
 - [x] ✅ Hardware 5.10 und Connectivity-Modul 1.14
 
