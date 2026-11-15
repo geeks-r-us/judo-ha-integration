@@ -6,6 +6,8 @@
 
 _Integration to integrate with [Judo iSoft][judo_isoft] water treatment systems._
 
+> **Disclaimer:** Independent, unofficial community project. Not affiliated with, authorized, maintained, sponsored or endorsed by JUDO Wasseraufbereitung GmbH. "Judo", "i-soft" and "myJUDO" are trademarks of their respective owners. Use at your own risk.
+
 **This integration will set up the following platforms.**
 
 Platform | Description

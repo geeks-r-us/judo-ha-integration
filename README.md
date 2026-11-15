@@ -8,6 +8,8 @@
 
 A Home Assistant custom integration for Judo iSoft water treatment systems.
 
+> **Disclaimer:** This is an independent, unofficial community project. It is **not affiliated with, authorized, maintained, sponsored or endorsed by JUDO Wasseraufbereitung GmbH** or any of its affiliates. "Judo", "i-soft", "myJUDO" and the Judo logo are trademarks of their respective owners and are used here only to identify the compatible products. Use at your own risk: the integration talks to your device through the official myJUDO cloud or the local interface and may change device settings.
+
 **This component will set up the following platforms.**
 
 | Platform        | Description                                               |
@@ -165,6 +167,8 @@ python -m pytest tests/
 Contributions are welcome! Please read the contributing guidelines and submit pull requests.
 
 ## License
+
+This project is not affiliated with JUDO Wasseraufbereitung GmbH (see the disclaimer at the top).
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
