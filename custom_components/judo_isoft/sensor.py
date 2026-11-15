@@ -103,7 +103,7 @@ class JudoiSoftDynamicSensor(_BaseSensor):
             .get(self._field_key, {})
             .get("value")
         )
-        if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
+        if self.device_class == SensorDeviceClass.TIMESTAMP:
             return dt_util.parse_datetime(value) if isinstance(value, str) else None
         return value
 
