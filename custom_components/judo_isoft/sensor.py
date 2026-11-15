@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, MANUFACTURER, MODEL
+from .device_helpers import mac_connections
 
 
 async def async_setup_entry(
@@ -54,6 +55,9 @@ class _BaseSensor(CoordinatorEntity, SensorEntity):
         model = device_data.get("model", MODEL)
         return {
             "identifiers": {(DOMAIN, self.config_entry.entry_id)},
+            "connections": mac_connections(
+                device_data.get("serial_number") or system_data.get("serial_number")
+            ),
             "name": f"{MANUFACTURER} {model}",
             "manufacturer": device_data.get("manufacturer", MANUFACTURER),
             "model": model,

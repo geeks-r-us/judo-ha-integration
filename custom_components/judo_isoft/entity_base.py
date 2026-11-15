@@ -9,6 +9,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL
+from .device_helpers import mac_connections
 
 
 class JudoiSoftCommandEntity(CoordinatorEntity):
@@ -34,6 +35,9 @@ class JudoiSoftCommandEntity(CoordinatorEntity):
         system_data = snapshot.get("system_status", {})
         return {
             "identifiers": {(DOMAIN, self.config_entry.entry_id)},
+            "connections": mac_connections(
+                device_data.get("serial_number") or system_data.get("serial_number")
+            ),
             "name": f"{MANUFACTURER} {device_data.get('model', MODEL)}",
             "manufacturer": device_data.get("manufacturer", MANUFACTURER),
             "model": device_data.get("model", MODEL),

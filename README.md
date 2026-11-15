@@ -128,6 +128,10 @@ trigger:
       code: 27   # maintenance due
 ```
 
+### Network information (UniFi etc.)
+
+The serial number of the connectivity module is its MAC address. The integration registers it as a network connection of the device, so integrations like UniFi attach IP address and network data to the same Home Assistant device.
+
 ### Services
 
 `judo_isoft.execute_command` - read or write any protocol command (`command`, optional `value`, `device_id`, `transport`).

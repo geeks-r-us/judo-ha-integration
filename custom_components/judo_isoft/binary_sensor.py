@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL
+from .device_helpers import mac_connections
 
 
 ONLINE_FIELD_KEY = "device_online"
@@ -52,6 +53,9 @@ class _BaseBinarySensor(CoordinatorEntity, BinarySensorEntity):
         system_data = self.coordinator.data.get("system_status", {})
         return {
             "identifiers": {(DOMAIN, self.config_entry.entry_id)},
+            "connections": mac_connections(
+                device_data.get("serial_number") or system_data.get("serial_number")
+            ),
             "name": f"{MANUFACTURER} {device_data.get('model', MODEL)}",
             "manufacturer": device_data.get("manufacturer", MANUFACTURER),
             "model": device_data.get("model", MODEL),
